@@ -56,13 +56,11 @@ export const deleteSchedule = async (req: Request, res: Response) => {
 export const toggleSchedule = async (req: Request, res: Response) => {
     try {
         const { scheduleId } = req.params
-        const schedule = await scheduleModel.findById(scheduleId)
+        const schedule = await scheduleModel.findByIdAndUpdate(scheduleId, [{ $set: { isActive: { $not: "$isActive" } } }], { new: true }) //Aggregation Pipeline
         if (!schedule) {
             res.status(404).json({ msg: "Schedule not found" })
             return
         }
-        schedule.isActive = !schedule.isActive
-        await schedule.save()
         res.status(200).json({
             msg: schedule.isActive ? "Schedule activated" : "Schedule deactivated",
             schedule

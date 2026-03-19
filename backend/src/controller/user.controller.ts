@@ -6,6 +6,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const jwtSecret = process.env.JWT_SECRET || ""
+console.log("value", jwtSecret)
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -31,7 +32,7 @@ export const registerUser = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body
-        if (password.length > 72) {
+        if (password.length > 20) {
             res.status(400).json({ msg: "Password too long" })
             return
         }
@@ -55,6 +56,7 @@ export const loginUser = async (req: Request, res: Response) => {
         res.status(200).json({ msg: "User logged in successfully", user })
         return
     } catch (error) {
+        console.log("error", error)
         res.status(500).json({ msg: "Internal server error" })
     }
 }

@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1.8);
+    opacity: 0;
+  }
+}
+
+.animate-float {
+  animation: floatUp linear infinite;
+}
