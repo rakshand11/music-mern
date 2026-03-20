@@ -7,7 +7,7 @@ import MusicBackground from "../components/MusicAnimation";
 
 const Signin: React.FC = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState<any>();
+    const [setUser] = useState<any>();
     const [loading, setLoading] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [formData, setFormData] = useState({
@@ -47,6 +47,7 @@ const Signin: React.FC = () => {
             toast.success("Logged in successfully");
             navigate("/");
         } catch (error: any) {
+            console.log("Error:", error.response?.data)
             toast.error(error.response?.data?.msg || "Login failed");
         } finally {
             setLoading(false);
@@ -144,22 +145,7 @@ const Signin: React.FC = () => {
                 </p>
             </div>
 
-            <style jsx>{`
-                @keyframes pulse-slow {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.02); }
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(30px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-pulse-slow {
-                    animation: pulse-slow 4s ease-in-out infinite;
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.8s ease-out forwards;
-                }
-            `}</style>
+
         </div>
     );
 };

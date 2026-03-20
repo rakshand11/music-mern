@@ -7,6 +7,7 @@ import { songRouter } from "./route/song.route.js"
 import { playlistRoute } from "./route/playlist.route.js"
 import { scheduleRouter } from "./route/schedule.route.js"
 import cors from "cors"
+import { cloudinary } from "./middleware/cloudinary.js"
 dotenv.config()
 
 const app = express()
@@ -21,7 +22,18 @@ const connectToDB = async () => {
         console.log("not connected to db")
     }
 }
+
+const connectCloudinary = async () => {
+    try {
+        await cloudinary.api.ping()
+        console.log("Cloudinary connected")
+    } catch (error) {
+        console.error("Cloudinary connection failed")
+    }
+}
+
 connectToDB()
+connectCloudinary()
 
 app.use(express.json())
 app.use(cookieParser())

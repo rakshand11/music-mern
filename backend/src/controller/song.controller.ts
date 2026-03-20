@@ -19,6 +19,7 @@ export const createSong = async (req: Request, res: Response) => {
         res.status(201).json({ msg: "Song created successfully", song })
         return
     } catch (error) {
+        console.log(error, "error")
         res.status(500).json({ msg: "Internal server error" })
     }
 }
