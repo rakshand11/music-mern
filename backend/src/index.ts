@@ -43,7 +43,9 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }))
-
+app.get(("/"), (req: Request, res: Response) => {
+    res.send("hello")
+})
 app.use("/user", userRouter)
 app.use("/song", songRouter)
 app.use("/playlist", playlistRoute)

@@ -13,6 +13,6 @@ songRouter.post("/create", adminOnly,
     , createSong)
 songRouter.get("/get-all", getAllSongs)
 songRouter.get("/get/:id", getSongById)
-songRouter.put("/update/:id", adminOnly, updateSong)
-songRouter.delete("/delete/:id", adminOnly, deleteSong)
+songRouter.put("/update/:id", upload.single("image"), adminOnly, updateSong)
+songRouter.delete("/delete/:id", adminOnly, upload.single("image"), deleteSong)
 songRouter.get("/search", searchSong)

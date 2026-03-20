@@ -187,11 +187,13 @@ const Navbar = () => {
                                 }}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
                             >
+
                                 <img
                                     src={song.imageUrl || "https://via.placeholder.com/40"}
                                     alt={song.title}
                                     className="w-10 h-10 rounded-lg object-cover"
                                 />
+
                                 <div className="flex-1">
                                     <p className="text-gray-800 font-medium text-sm">{song.title}</p>
                                     <p className="text-gray-400 text-xs">{song.artist}</p>

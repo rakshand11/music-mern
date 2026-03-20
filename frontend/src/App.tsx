@@ -16,7 +16,7 @@ import LikedSongs from './pages/LikeSongs'
 
 const Layout = () => {
   const location = useLocation()
-  const hideNavbar = location.pathname === "/signup" || location.pathname === "/signin" || location.pathname === "/admin/login"
+  const hideNavbar = location.pathname === "/signup" || location.pathname === "/signin" || location.pathname === "/admin/login" || location.pathname === "/admin"
 
   return (
     <>

@@ -27,6 +27,14 @@ interface PlayerContextType {
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
+// ✅ helper to save recently played
+const saveRecentSong = (song: Song) => {
+    const recent = JSON.parse(localStorage.getItem("recentSongs") || "[]")
+    const filtered = recent.filter((s: Song) => s._id !== song._id)
+    const updated = [song, ...filtered].slice(0, 5)
+    localStorage.setItem("recentSongs", JSON.stringify(updated))
+}
+
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     const [currentSong, setCurrentSong] = useState<Song | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -47,18 +55,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
                 schedules.forEach((schedule: any) => {
                     if (schedule.isActive && new Date(schedule.scheduledTime) <= now) {
-
-                        // ✅ deactivate FIRST to prevent replaying
                         axios.patch(
                             `http://localhost:3000/schedule/toggle/${schedule._id}`,
                             {},
                             { withCredentials: true }
                         ).then(() => {
-                            // ✅ play only after successfully deactivated
                             audioRef.current.src = schedule.song.audioUrl;
                             audioRef.current.play();
                             setCurrentSong(schedule.song);
                             setIsPlaying(true);
+                            saveRecentSong(schedule.song) // ✅ save to recent
                         }).catch((err) => {
                             console.log("Toggle failed:", err);
                         });
@@ -67,7 +73,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             } catch (error) {
                 // user not logged in — skip silently
             }
-        }, 60000); // every minute
+        }, 60000);
 
         return () => clearInterval(interval);
     }, []);
@@ -81,6 +87,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         audioRef.current.play();
         setCurrentSong(song);
         setIsPlaying(true);
+        saveRecentSong(song) // ✅ save to recent
     };
 
     const playQueue = (songs: Song[], startIndex: number = 0) => {
@@ -90,6 +97,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         audioRef.current.play();
         setCurrentSong(songs[startIndex]);
         setIsPlaying(true);
+        saveRecentSong(songs[startIndex]) // ✅ save to recent
     };
 
     const togglePlay = () => {
@@ -115,6 +123,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             audioRef.current.play();
             setCurrentSong(queue[next]);
             setIsPlaying(true);
+            saveRecentSong(queue[next]) // ✅ save to recent
         }
     };
 
@@ -126,6 +135,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             audioRef.current.play();
             setCurrentSong(queue[prev]);
             setIsPlaying(true);
+            saveRecentSong(queue[prev]) // ✅ save to recent
         }
     };
 

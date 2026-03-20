@@ -39,10 +39,42 @@ const Schedule = () => {
         fetchSchedules()
     }, [])
 
-    const handleToggle = async (scheduleId: string) => {
+    const handleToggle = async (schedule: Schedule) => {
         try {
+            // ✅ if activating a past schedule, auto reschedule to tomorrow same time
+            if (!schedule.isActive && new Date(schedule.scheduledTime) < new Date()) {
+                const oldTime = new Date(schedule.scheduledTime)
+                const newTime = new Date()
+                newTime.setDate(newTime.getDate() + 1) // next day
+                newTime.setHours(oldTime.getHours())   // same hour
+                newTime.setMinutes(oldTime.getMinutes()) // same minute
+                newTime.setSeconds(0)
+
+                await axios.put(
+                    `http://localhost:3000/schedule/update-schedule/${schedule._id}`,
+                    { scheduledTime: newTime },
+                    { withCredentials: true }
+                )
+
+                // ✅ also toggle to active
+                await axios.patch(
+                    `http://localhost:3000/schedule/toggle/${schedule._id}`,
+                    {},
+                    { withCredentials: true }
+                )
+
+                toast.success(`Rescheduled to tomorrow at ${oldTime.toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true
+                })} ✅`)
+                fetchSchedules()
+                return
+            }
+
+            // normal toggle
             const res = await axios.patch(
-                `http://localhost:3000/schedule/toggle/${scheduleId}`,
+                `http://localhost:3000/schedule/toggle/${schedule._id}`,
                 {},
                 { withCredentials: true }
             )
@@ -76,6 +108,8 @@ const Schedule = () => {
             hour12: true
         })
     }
+
+    const isPast = (time: string) => new Date(time) < new Date()
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-8">
@@ -114,8 +148,8 @@ const Schedule = () => {
                         <div
                             key={schedule._id}
                             className={`flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 ${schedule.isActive
-                                ? "bg-gray-800 border-green-500/30"
-                                : "bg-gray-800/50 border-gray-700 opacity-60"
+                                    ? "bg-gray-800 border-green-500/30"
+                                    : "bg-gray-800/50 border-gray-700 opacity-60"
                                 }`}
                         >
                             {/* Song Image */}
@@ -130,15 +164,21 @@ const Schedule = () => {
                                 <p className="text-white font-semibold">{schedule.song?.title}</p>
                                 <p className="text-gray-400 text-sm">{schedule.song?.artist}</p>
                                 <div className="flex items-center gap-1 mt-1">
-                                    <Clock size={12} className="text-green-400" />
-                                    <p className="text-green-400 text-xs">{formatTime(schedule.scheduledTime)}</p>
+                                    <Clock size={12} className={isPast(schedule.scheduledTime) && !schedule.isActive ? "text-red-400" : "text-green-400"} />
+                                    <p className={`text-xs ${isPast(schedule.scheduledTime) && !schedule.isActive ? "text-red-400" : "text-green-400"}`}>
+                                        {formatTime(schedule.scheduledTime)}
+                                        {/* ✅ show past label */}
+                                        {isPast(schedule.scheduledTime) && !schedule.isActive && (
+                                            <span className="ml-2 text-orange-400">(past — will reschedule to tomorrow)</span>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
 
                             {/* Status Badge */}
                             <span className={`text-xs font-semibold px-3 py-1 rounded-full ${schedule.isActive
-                                ? "bg-green-500/20 text-green-400"
-                                : "bg-gray-600/20 text-gray-500"
+                                    ? "bg-green-500/20 text-green-400"
+                                    : "bg-gray-600/20 text-gray-500"
                                 }`}>
                                 {schedule.isActive ? "Active" : "Inactive"}
                             </span>
@@ -147,7 +187,7 @@ const Schedule = () => {
                             <div className="flex items-center gap-2">
                                 {/* Toggle */}
                                 <button
-                                    onClick={() => handleToggle(schedule._id)}
+                                    onClick={() => handleToggle(schedule)}  // ✅ pass full schedule
                                     className="p-2 rounded-full hover:bg-white/10 transition"
                                     title={schedule.isActive ? "Deactivate" : "Activate"}
                                 >

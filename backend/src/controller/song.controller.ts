@@ -53,7 +53,19 @@ export const updateSong = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
         const { title, artist, album, duration } = req.body
-        const song = await songModel.findByIdAndUpdate(id, { title, artist, album, duration }, { returnDocument: "after" })
+
+        const imageUrl = req.file?.path
+
+
+        const updateData: any = { title, artist, album, duration }
+        if (imageUrl) updateData.imageUrl = imageUrl
+
+        const song = await songModel.findByIdAndUpdate(
+            id,
+            updateData,
+            { returnDocument: "after" }
+        )
+
         if (!song) {
             res.status(404).json({ msg: "Song not found" })
             return
@@ -61,6 +73,7 @@ export const updateSong = async (req: Request, res: Response) => {
         res.status(200).json({ msg: "Updated successfully", song })
         return
     } catch (error) {
+        console.log("error", error)
         res.status(500).json({ msg: "Internal server error" })
     }
 }

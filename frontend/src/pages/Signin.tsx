@@ -7,7 +7,7 @@ import MusicBackground from "../components/MusicAnimation";
 
 const Signin: React.FC = () => {
     const navigate = useNavigate();
-    const [setUser] = useState<any>();
+    const [user, setUser] = useState<any>();
     const [loading, setLoading] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [formData, setFormData] = useState({
