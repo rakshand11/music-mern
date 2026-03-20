@@ -61,6 +61,38 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 }
 
+export const updateUser = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.user
+        const avatar = req.file?.path
+        const { name } = req.body
+
+        const user = await userModel.findByIdAndUpdate(id, {
+            name, avatar
+        }, { returnDocument: "after" })
+        if (!user) {
+            res.status(401).json({
+                msg: "User not found"
+            })
+            return
+        }
+        res.status(200).json({
+            msg: "updated successfully",
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar
+            }
+        })
+        return
+    } catch (error) {
+        res.status(500).json({
+            msg: "Internal server error"
+        })
+    }
+}
+
 export const logoutUser = async (req: Request, res: Response) => {
     try {
         res.clearCookie("userToken", {
@@ -92,6 +124,56 @@ export const adminLogin = async (req: Request, res: Response) => {
             maxAge: 24 * 60 * 60 * 1000
         })
         res.status(200).json({ msg: "Admin logged in successfully", admin: { email, role: "admin" } })
+    } catch (error) {
+        res.status(500).json({ msg: "Internal server error" })
+    }
+}
+
+export const toggleLikeSong = async (req: Request, res: Response) => {
+    try {
+        const songId = req.params.songId as string
+        const userId = req.user._id
+
+        const user = await userModel.findById(userId)
+        if (!user) {
+            res.status(404).json({ msg: "User not found" })
+            return
+        }
+
+        const alreadyLiked = user.likedSongs.includes(songId as any)
+
+        if (alreadyLiked) {
+
+            user.likedSongs = user.likedSongs.filter(
+                (id) => id.toString() !== songId
+            ) as any
+            await user.save()
+            res.status(200).json({ msg: "Song unliked", liked: false })
+        } else {
+
+            user.likedSongs.push(songId as any)
+            await user.save()
+            res.status(200).json({ msg: "Song liked", liked: true })
+        }
+        return
+    } catch (error) {
+        res.status(500).json({ msg: "Internal server error" })
+    }
+}
+
+export const getLikedSongs = async (req: Request, res: Response) => {
+    try {
+        const user = await userModel
+            .findById(req.user._id)
+            .populate("likedSongs")
+
+        if (!user) {
+            res.status(404).json({ msg: "User not found" })
+            return
+        }
+
+        res.status(200).json({ msg: "Liked songs", songs: user.likedSongs })
+        return
     } catch (error) {
         res.status(500).json({ msg: "Internal server error" })
     }

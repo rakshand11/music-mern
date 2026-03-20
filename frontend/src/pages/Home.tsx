@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import axios from 'axios'
-import { Play, Clock, X } from 'lucide-react'
+import { Play, Clock, X, Heart } from 'lucide-react'
 import { usePlayer } from '../context/PlayerContext'
 import toast from 'react-hot-toast'
 
@@ -18,12 +18,15 @@ type Song = {
 const Home = () => {
     const [songs, setSongs] = useState<Song[]>([])
     const [loading, setLoading] = useState(true)
+    const [likedSongs, setLikedSongs] = useState<string[]>([]) // ✅ store liked song IDs
     const { playQueue } = usePlayer()
 
     // schedule states
     const [showSchedule, setShowSchedule] = useState(false)
     const [selectedSong, setSelectedSong] = useState<Song | null>(null)
     const [scheduledTime, setScheduledTime] = useState("")
+
+    const user = JSON.parse(localStorage.getItem("user") || "null")
 
     useEffect(() => {
         const fetchSongs = async () => {
@@ -38,6 +41,49 @@ const Home = () => {
         }
         fetchSongs()
     }, [])
+
+    // ✅ fetch liked songs
+    useEffect(() => {
+        const fetchLikedSongs = async () => {
+            if (!user) return
+            try {
+                const res = await axios.get(
+                    "http://localhost:3000/user/liked-songs",
+                    { withCredentials: true }
+                )
+                const ids = res.data.songs.map((s: any) => s._id)
+                setLikedSongs(ids)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchLikedSongs()
+    }, [])
+
+    // ✅ toggle like
+    const handleLike = async (e: React.MouseEvent, songId: string) => {
+        e.stopPropagation()
+        if (!user) {
+            toast.error("Please sign in to like songs")
+            return
+        }
+        try {
+            const res = await axios.post(
+                `http://localhost:3000/user/like/${songId}`,
+                {},
+                { withCredentials: true }
+            )
+            if (res.data.liked) {
+                setLikedSongs(prev => [...prev, songId])
+                toast.success("Added to liked songs ❤️")
+            } else {
+                setLikedSongs(prev => prev.filter(id => id !== songId))
+                toast.success("Removed from liked songs")
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.msg || "Failed to like song")
+        }
+    }
 
     const handleSchedule = async () => {
         if (!selectedSong || !scheduledTime) {
@@ -102,7 +148,7 @@ const Home = () => {
                                         onClick={() => playQueue(songs, index)}
                                     />
 
-                                    {/* Play button overlay */}
+                                    {/* Play button */}
                                     <div
                                         onClick={() => playQueue(songs, index)}
                                         className='absolute bottom-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg'
@@ -110,7 +156,7 @@ const Home = () => {
                                         <Play size={18} className='text-white ml-0.5' />
                                     </div>
 
-                                    {/* Schedule button overlay */}
+                                    {/* Schedule button */}
                                     <div
                                         onClick={(e) => {
                                             e.stopPropagation()
@@ -122,16 +168,35 @@ const Home = () => {
                                     >
                                         <Clock size={14} className='text-white' />
                                     </div>
+
+                                    {/* ✅ Like button */}
+                                    <div
+                                        onClick={(e) => handleLike(e, song._id)}
+                                        className='absolute top-2 left-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300'
+                                        title="Like"
+                                    >
+                                        <Heart
+                                            size={14}
+                                            className={likedSongs.includes(song._id)
+                                                ? 'text-red-500 fill-red-500'
+                                                : 'text-white'
+                                            }
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Song Info */}
-                                <p
-                                    onClick={() => playQueue(songs, index)}
-                                    className='text-white font-semibold text-sm truncate'
-                                >
-                                    {song.title}
-                                </p>
-                                <p className='text-gray-400 text-xs truncate mt-1'>{song.artist}</p>
+                                <div className='flex items-center justify-between'>
+                                    <div className='flex-1 min-w-0'>
+                                        <p
+                                            onClick={() => playQueue(songs, index)}
+                                            className='text-white font-semibold text-sm truncate'
+                                        >
+                                            {song.title}
+                                        </p>
+                                        <p className='text-gray-400 text-xs truncate mt-1'>{song.artist}</p>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
