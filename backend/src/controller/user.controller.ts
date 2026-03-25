@@ -6,7 +6,6 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const jwtSecret = process.env.JWT_SECRET || ""
-console.log("value", jwtSecret)
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -32,7 +31,6 @@ export const registerUser = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body
-        console.log("Login attempt:", email, password)
 
         if (password.length > 20) {
             res.status(400).json({ msg: "Password too long" })
@@ -43,15 +41,13 @@ export const loginUser = async (req: Request, res: Response) => {
             res.status(400).json({ msg: "User not available" })
             return
         }
-        console.log("User found:", user?.email)
+
         const passwordValidation = await bcrypt.compare(password, user.password)
         if (!passwordValidation) {
             res.status(401).json({ msg: "Invalid credentials" })
             return
 
         }
-
-        console.log("Password match:", passwordValidation)
         const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: "30d" })
         res.cookie("userToken", token, {
             httpOnly: true,

@@ -70,7 +70,16 @@ export const updateSong = async (req: Request, res: Response) => {
             res.status(404).json({ msg: "Song not found" })
             return
         }
-        res.status(200).json({ msg: "Updated successfully", song })
+        res.status(200).json({
+            msg: "Updated successfully", song: {
+                _id: song._id,
+                title: song.title,
+                artist: song.artist,
+                album: song.album,
+                duration: song.duration,
+                imageUrl: song.imageUrl
+            }
+        })
         return
     } catch (error) {
         console.log("error", error)

@@ -13,7 +13,6 @@ export const createPlaylist = async (req: Request, res: Response) => {
         res.status(201).json({ msg: "Playlist created successfully", playlist })
         return
     } catch (error) {
-        console.log(error, "error")
         res.status(500).json({ msg: "Internal server error" })
     }
 }
