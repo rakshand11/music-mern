@@ -208,7 +208,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             {/* Center Section - Enhanced Search */}
             <div className="relative flex-1 max-w-md mx-8 hidden md:flex" ref={searchRef}>
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                    <Search size={18} className="text-gray-400 group-hover:text-emerald-400 transition-colors" />
+                    <Search size={18} className="text-white group-hover:text-emerald-400 transition-colors" />
                 </div>
                 <input
                     type="text"

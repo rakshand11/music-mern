@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect } from "react";
-import axios from "axios";
 import type { ReactNode } from "react";
+import { connectSocket, disconnectSocket } from "../socket";
 
 type Song = {
     _id: string;
@@ -27,7 +27,6 @@ interface PlayerContextType {
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
-// ✅ helper to save recently played
 const saveRecentSong = (song: Song) => {
     const recent = JSON.parse(localStorage.getItem("recentSongs") || "[]")
     const filtered = recent.filter((s: Song) => s._id !== song._id)
@@ -42,41 +41,35 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const audioRef = useRef<HTMLAudioElement>(new Audio());
 
-    // ✅ Schedule checker — runs every minute
+    // ✅ Socket setup — reads userId directly from localStorage
     useEffect(() => {
-        const interval = setInterval(async () => {
-            try {
-                const res = await axios.get(
-                    "http://localhost:3000/schedule/get-schedule",
-                    { withCredentials: true }
-                );
-                const schedules = res.data.schedules;
-                const now = new Date();
+        const storedUser = localStorage.getItem("user")
+        if (!storedUser) return // not logged in — skip
 
-                schedules.forEach((schedule: any) => {
-                    if (schedule.isActive && new Date(schedule.scheduledTime) <= now) {
-                        axios.patch(
-                            `http://localhost:3000/schedule/toggle/${schedule._id}`,
-                            {},
-                            { withCredentials: true }
-                        ).then(() => {
-                            audioRef.current.src = schedule.song.audioUrl;
-                            audioRef.current.play();
-                            setCurrentSong(schedule.song);
-                            setIsPlaying(true);
-                            saveRecentSong(schedule.song) // ✅ save to recent
-                        }).catch((err) => {
-                            console.log("Toggle failed:", err);
-                        });
-                    }
-                });
-            } catch (error) {
-                // user not logged in — skip silently
-            }
-        }, 60000);
+        const user = JSON.parse(storedUser)
+        const userId = user._id
 
-        return () => clearInterval(interval);
-    }, []);
+        if (!userId) return
+
+        // ✅ connect socket with userId
+        const socket = connectSocket(userId)
+
+        // ✅ listen for cron-triggered song
+        socket.on("play-song", ({ song }: { song: Song }) => {
+            console.log("🎵 Scheduled song triggered:", song.title)
+            audioRef.current.src = song.audioUrl
+            audioRef.current.play()
+            setCurrentSong(song)
+            setIsPlaying(true)
+            saveRecentSong(song)
+        })
+
+        // ✅ cleanup on unmount
+        return () => {
+            socket.off("play-song")
+            disconnectSocket()
+        }
+    }, [])
 
     const playSong = (song: Song) => {
         if (currentSong?._id === song._id) {
@@ -87,7 +80,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         audioRef.current.play();
         setCurrentSong(song);
         setIsPlaying(true);
-        saveRecentSong(song) // ✅ save to recent
+        saveRecentSong(song)
     };
 
     const playQueue = (songs: Song[], startIndex: number = 0) => {
@@ -97,7 +90,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         audioRef.current.play();
         setCurrentSong(songs[startIndex]);
         setIsPlaying(true);
-        saveRecentSong(songs[startIndex]) // ✅ save to recent
+        saveRecentSong(songs[startIndex])
     };
 
     const togglePlay = () => {
@@ -123,7 +116,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             audioRef.current.play();
             setCurrentSong(queue[next]);
             setIsPlaying(true);
-            saveRecentSong(queue[next]) // ✅ save to recent
+            saveRecentSong(queue[next])
         }
     };
 
@@ -135,7 +128,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             audioRef.current.play();
             setCurrentSong(queue[prev]);
             setIsPlaying(true);
-            saveRecentSong(queue[prev]) // ✅ save to recent
+            saveRecentSong(queue[prev])
         }
     };
 

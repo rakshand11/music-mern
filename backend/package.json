@@ -23,6 +23,8 @@
     "mongoose": "^9.3.1",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
+    "node-cron": "^4.2.1",
+    "socket.io": "^4.8.3",
     "tsc-watch": "^7.2.0"
   },
   "devDependencies": {

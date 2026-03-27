@@ -138,9 +138,7 @@ const Home: React.FC<HomeProps> = () => {
                     <h1 className='text-2xl md:text-3xl lg:text-4xl font-black bg-black/70 backdrop-blur-md px-6 py-3 rounded-2xl text-white drop-shadow-2xl border border-white/10 mb-4 inline-block'>
                         🎵 All Songs
                     </h1>
-                    <div className='absolute -top-12 right-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl border-2 border-white/20 animate-pulse'>
-                        <Search size={20} className='text-white drop-shadow-lg' />
-                    </div>
+
                 </div>
 
                 {/* Loading */}
