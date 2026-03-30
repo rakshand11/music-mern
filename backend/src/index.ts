@@ -17,10 +17,10 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT
 
-// ✅ wrap express with http server
+
 const httpServer = createServer(app)
 
-// ✅ setup socket.io
+
 export const io = new Server(httpServer, {
     cors: {
         origin: ["http://localhost:5173"],
@@ -28,7 +28,7 @@ export const io = new Server(httpServer, {
     }
 })
 
-// ✅ track userId → socketId
+
 export const userSocketMap = new Map<string, string>()
 
 io.on("connection", (socket) => {
