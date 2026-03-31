@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Music, Upload, X } from "lucide-react";
 import toast from "react-hot-toast";
+import api from "../aiosInstance";
 
 const CreatePlaylist = () => {
     const navigate = useNavigate();
@@ -36,11 +36,7 @@ const CreatePlaylist = () => {
             formData.append("name", name);
             if (coverImage) formData.append("coverImage", coverImage);
 
-            await axios.post(
-                "http://localhost:3000/playlist/create",
-                formData,
-                { withCredentials: true }
-            );
+            await api.post("/playlist/create", formData);
 
             toast.success("Playlist created!");
             navigate("/");

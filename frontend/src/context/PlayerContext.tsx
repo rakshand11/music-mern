@@ -27,13 +27,6 @@ interface PlayerContextType {
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
-const saveRecentSong = (song: Song) => {
-    const recent = JSON.parse(localStorage.getItem("recentSongs") || "[]")
-    const filtered = recent.filter((s: Song) => s._id !== song._id)
-    const updated = [song, ...filtered].slice(0, 5)
-    localStorage.setItem("recentSongs", JSON.stringify(updated))
-}
-
 export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     const [currentSong, setCurrentSong] = useState<Song | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -41,20 +34,26 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const audioRef = useRef<HTMLAudioElement>(new Audio());
 
-    // ✅ Socket setup — reads userId directly from localStorage
+
+    const saveRecentSong = (song: Song) => {
+        const recent = JSON.parse(localStorage.getItem("recentSongs") || "[]")
+        const filtered = recent.filter((s: Song) => s._id !== song._id)
+        const updated = [song, ...filtered].slice(0, 5)
+        localStorage.setItem("recentSongs", JSON.stringify(updated))
+        window.dispatchEvent(new Event("storage-recent-update"))
+    }
+
     useEffect(() => {
         const storedUser = localStorage.getItem("user")
-        if (!storedUser) return // not logged in — skip
+        if (!storedUser) return
 
         const user = JSON.parse(storedUser)
         const userId = user._id
 
         if (!userId) return
 
-        // ✅ connect socket with userId
         const socket = connectSocket(userId)
 
-        // ✅ listen for cron-triggered song
         socket.on("play-song", ({ song }: { song: Song }) => {
             console.log("🎵 Scheduled song triggered:", song.title)
             audioRef.current.src = song.audioUrl
@@ -64,7 +63,6 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             saveRecentSong(song)
         })
 
-        // ✅ cleanup on unmount
         return () => {
             socket.off("play-song")
             disconnectSocket()

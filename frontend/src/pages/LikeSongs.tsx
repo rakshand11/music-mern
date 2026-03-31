@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
 import { Heart, Play, Clock, X } from 'lucide-react'
 import { usePlayer } from '../context/PlayerContext'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
+import api from '../aiosInstance'
 
 type Song = {
     _id: string;
@@ -22,17 +22,13 @@ const LikedSongs = () => {
     const { playQueue } = usePlayer()
     const navigate = useNavigate()
 
-    // schedule states
     const [showSchedule, setShowSchedule] = useState(false)
     const [selectedSong, setSelectedSong] = useState<Song | null>(null)
     const [scheduledTime, setScheduledTime] = useState("")
 
     const fetchLikedSongs = async () => {
         try {
-            const res = await axios.get(
-                "http://localhost:3000/user/liked-songs",
-                { withCredentials: true }
-            )
+            const res = await api.get("/user/liked-songs") // 👈
             setSongs(res.data.songs)
         } catch (error) {
             console.log(error)
@@ -47,11 +43,7 @@ const LikedSongs = () => {
 
     const handleUnlike = async (songId: string) => {
         try {
-            await axios.post(
-                `http://localhost:3000/user/like/${songId}`,
-                {},
-                { withCredentials: true }
-            )
+            await api.post(`/user/like/${songId}`, {}) // 👈
             toast.success("Removed from liked songs")
             setSongs(prev => prev.filter(s => s._id !== songId))
         } catch (error: any) {
@@ -65,11 +57,7 @@ const LikedSongs = () => {
             return
         }
         try {
-            await axios.post(
-                "http://localhost:3000/schedule/create",
-                { song: selectedSong._id, scheduledTime },
-                { withCredentials: true }
-            )
+            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime }) // 👈
             toast.success("Song scheduled!")
             setShowSchedule(false)
             setScheduledTime("")
@@ -81,14 +69,9 @@ const LikedSongs = () => {
 
     return (
         <div className='flex bg-black min-h-screen'>
-
-            {/* Sidebar */}
             <Sidebar />
 
-            {/* Main Content */}
             <div className="flex-1 bg-gradient-to-b from-black via-black to-red-950/30 p-8 overflow-y-auto">
-
-                {/* Header */}
                 <div className="flex items-end gap-8 mb-10">
                     <div className="w-48 h-48 bg-gradient-to-br from-red-800 to-red-950 rounded-2xl flex items-center justify-center shadow-2xl">
                         <Heart size={80} className="text-white fill-white" />
@@ -100,7 +83,6 @@ const LikedSongs = () => {
                     </div>
                 </div>
 
-                {/* Play All Button */}
                 {songs.length > 0 && (
                     <button
                         onClick={() => playQueue(songs, 0)}
@@ -111,14 +93,12 @@ const LikedSongs = () => {
                     </button>
                 )}
 
-                {/* Loading */}
                 {loading && (
                     <div className="flex items-center justify-center h-64">
                         <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
 
-                {/* Empty */}
                 {!loading && songs.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-64 text-center">
                         <Heart size={48} className="text-gray-600 mb-4" />
@@ -133,7 +113,6 @@ const LikedSongs = () => {
                     </div>
                 )}
 
-                {/* Songs List */}
                 {!loading && songs.length > 0 && (
                     <div className="space-y-2 max-w-4xl">
                         {songs.map((song, index) => (
@@ -141,7 +120,6 @@ const LikedSongs = () => {
                                 key={song._id}
                                 className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition group"
                             >
-                                {/* Index / Play */}
                                 <span className="text-gray-500 w-6 text-center group-hover:hidden">{index + 1}</span>
                                 <Play
                                     size={16}
@@ -149,28 +127,21 @@ const LikedSongs = () => {
                                     onClick={() => playQueue(songs, index)}
                                 />
 
-                                {/* Image */}
                                 <img
                                     src={song.imageUrl || "https://via.placeholder.com/50"}
                                     alt={song.title}
                                     className="w-12 h-12 rounded-lg object-cover"
                                 />
 
-                                {/* Info */}
                                 <div className="flex-1">
                                     <p className="text-white font-medium">{song.title}</p>
                                     <p className="text-gray-400 text-sm">{song.artist}</p>
                                 </div>
 
-                                {/* Album */}
                                 <p className="text-gray-400 text-sm hidden md:block">{song.album}</p>
-
-                                {/* Duration */}
                                 <span className="text-gray-400 text-sm">{song.duration}s</span>
 
-                                {/* Actions */}
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                                    {/* Schedule */}
                                     <button
                                         onClick={() => { setSelectedSong(song); setShowSchedule(true) }}
                                         className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-green-400 transition"
@@ -179,7 +150,6 @@ const LikedSongs = () => {
                                         <Clock size={18} />
                                     </button>
 
-                                    {/* Unlike */}
                                     <button
                                         onClick={() => handleUnlike(song._id)}
                                         className="p-2 rounded-full hover:bg-white/10 transition"
@@ -194,11 +164,9 @@ const LikedSongs = () => {
                 )}
             </div>
 
-            {/* Schedule Modal */}
             {showSchedule && selectedSong && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-white">Schedule Song</h2>
                             <button onClick={() => setShowSchedule(false)} className="text-gray-400 hover:text-white">

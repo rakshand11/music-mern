@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
-import axios from 'axios'
 import { Play, Clock, X, Heart, Search } from 'lucide-react'
 import { usePlayer } from '../context/PlayerContext'
 import toast from 'react-hot-toast'
+import api from '../aiosInstance'
 
 type Song = {
     _id: string;
@@ -28,11 +28,10 @@ const Home: React.FC<HomeProps> = () => {
 
     const user = JSON.parse(localStorage.getItem("user") || "null") as { _id: string } | null
 
-    // Memoized fetch functions
     const fetchSongs = useCallback(async () => {
         try {
             setLoading(true)
-            const res = await axios.get<{ songs: Song[] }>("http://localhost:3000/song/get-all")
+            const res = await api.get<{ songs: Song[] }>("/song/get-all") // 👈
             setSongs(res.data.songs)
         } catch (error) {
             console.error('Failed to fetch songs:', error)
@@ -45,10 +44,7 @@ const Home: React.FC<HomeProps> = () => {
     const fetchLikedSongs = useCallback(async () => {
         if (!user?._id) return
         try {
-            const res = await axios.get<{ songs: { _id: string }[] }>(
-                "http://localhost:3000/user/liked-songs",
-                { withCredentials: true }
-            )
+            const res = await api.get<{ songs: { _id: string }[] }>("/user/liked-songs") // 👈
             const ids = res.data.songs.map((s: { _id: string }) => s._id)
             setLikedSongs(ids)
         } catch (error) {
@@ -56,7 +52,6 @@ const Home: React.FC<HomeProps> = () => {
         }
     }, [user?._id])
 
-    // Effects
     useEffect(() => {
         fetchSongs()
     }, [fetchSongs])
@@ -72,11 +67,7 @@ const Home: React.FC<HomeProps> = () => {
             return
         }
         try {
-            const res = await axios.post<{ liked: boolean }>(
-                `http://localhost:3000/user/like/${songId}`,
-                {},
-                { withCredentials: true }
-            )
+            const res = await api.post<{ liked: boolean }>(`/user/like/${songId}`, {}) // 👈
             if (res.data.liked) {
                 setLikedSongs(prev => [...prev, songId])
                 toast.success("Added to liked songs ❤️")
@@ -95,11 +86,7 @@ const Home: React.FC<HomeProps> = () => {
             return
         }
         try {
-            await axios.post(
-                "http://localhost:3000/schedule/create",
-                { song: selectedSong._id, scheduledTime },
-                { withCredentials: true }
-            )
+            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime }) // 👈
             toast.success("Song scheduled!")
             setShowSchedule(false)
             setScheduledTime("")
@@ -121,27 +108,21 @@ const Home: React.FC<HomeProps> = () => {
 
     return (
         <div className='flex bg-gradient-to-br from-black via-gray-900 to-purple-900/20 min-h-screen overflow-hidden'>
-            {/* Animated background particles */}
             <div className="absolute inset-0 opacity-20 pointer-events-none">
                 <div className="absolute top-20 left-20 w-2 h-2 bg-purple-500 rounded-full animate-ping [animation-delay:1s]" />
                 <div className="absolute top-1/2 right-32 w-1 h-1 bg-pink-500 rounded-full animate-pulse [animation-delay:2s]" />
                 <div className="absolute bottom-32 left-1/2 w-3 h-3 bg-blue-500 rounded-full animate-bounce [animation-delay:3s]" />
             </div>
 
-            {/* Sidebar */}
             <Sidebar />
 
-            {/* Main Content */}
             <div className='flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto'>
-                {/* Compact Header with Search */}
                 <div className='relative mb-6'>
                     <h1 className='text-2xl md:text-3xl lg:text-4xl font-black bg-black/70 backdrop-blur-md px-6 py-3 rounded-2xl text-white drop-shadow-2xl border border-white/10 mb-4 inline-block'>
                         🎵 All Songs
                     </h1>
-
                 </div>
 
-                {/* Loading */}
                 {loading && (
                     <div className='flex items-center justify-center h-64'>
                         <div className='relative'>
@@ -151,12 +132,10 @@ const Home: React.FC<HomeProps> = () => {
                     </div>
                 )}
 
-                {/* Empty */}
                 {!loading && songs.length === 0 && (
                     <p className='text-gray-400 text-center py-20 text-lg'>No songs available yet</p>
                 )}
 
-                {/* Compact Songs Grid */}
                 {!loading && songs.length > 0 && (
                     <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4'>
                         {songs.map((song, index) => (
@@ -174,7 +153,6 @@ const Home: React.FC<HomeProps> = () => {
                 )}
             </div>
 
-            {/* Enhanced Schedule Modal */}
             {showSchedule && selectedSong && (
                 <ScheduleModal
                     song={selectedSong}
@@ -192,7 +170,6 @@ const Home: React.FC<HomeProps> = () => {
     )
 }
 
-// Extracted SongCard Component for better TypeScript
 interface SongCardProps {
     song: Song
     index: number
@@ -214,10 +191,8 @@ const SongCard: React.FC<SongCardProps> = React.memo(({
         className='group relative bg-gradient-to-br from-gray-900/50 to-gray-800/70 backdrop-blur-sm rounded-2xl p-3 hover:bg-gradient-to-br hover:from-purple-500/10 hover:to-pink-500/10 hover:shadow-2xl hover:shadow-purple-500/25 hover:shadow-lg border border-white/10 hover:border-purple-400/50 transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] cursor-pointer overflow-hidden'
         onClick={() => onPlay(index)}
     >
-        {/* Gradient Overlay */}
         <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
 
-        {/* Cover Image */}
         <div className='relative z-10 mb-3'>
             <img
                 src={song.imageUrl || 'https://via.placeholder.com/200?text=No+Image'}
@@ -225,7 +200,6 @@ const SongCard: React.FC<SongCardProps> = React.memo(({
                 className='w-full aspect-square object-cover rounded-xl group-hover:scale-110 transition-transform duration-500 shadow-2xl'
             />
 
-            {/* Neon Play Button */}
             <div
                 className='absolute bottom-2 right-2 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-y-3 group-hover:translate-y-0 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 border-2 border-white/20 backdrop-blur-sm'
                 onClick={(e) => {
@@ -236,7 +210,6 @@ const SongCard: React.FC<SongCardProps> = React.memo(({
                 <Play size={20} className='text-white drop-shadow-lg ml-0.5' />
             </div>
 
-            {/* Schedule Button */}
             <div
                 className='absolute top-2 right-2 w-9 h-9 bg-black/70 hover:bg-purple-500/60 backdrop-blur-sm rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-purple-400/50 hover:scale-110'
                 onClick={(e) => onSchedule(e, song)}
@@ -245,7 +218,6 @@ const SongCard: React.FC<SongCardProps> = React.memo(({
                 <Clock size={16} className='text-white drop-shadow-md' />
             </div>
 
-            {/* Like Button */}
             <div
                 className='absolute top-2 left-2 w-9 h-9 bg-black/70 hover:bg-red-500/60 backdrop-blur-sm rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg hover:shadow-red-400/50 hover:scale-110'
                 onClick={(e) => onLike(e, song._id)}
@@ -261,7 +233,6 @@ const SongCard: React.FC<SongCardProps> = React.memo(({
             </div>
         </div>
 
-        {/* Compact Song Info */}
         <div className='relative z-10 flex flex-col space-y-1'>
             <p className='text-white font-bold text-sm truncate line-clamp-1 group-hover:text-purple-300 transition-colors drop-shadow-lg'>
                 {song.title}
@@ -271,7 +242,6 @@ const SongCard: React.FC<SongCardProps> = React.memo(({
     </div>
 ))
 
-// Extracted ScheduleModal Component
 interface ScheduleModalProps {
     song: Song
     scheduledTime: string

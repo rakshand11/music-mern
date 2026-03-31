@@ -6,7 +6,7 @@ const MusicPlayer = () => {
     const { currentSong, isPlaying, togglePlay, stopSong, playNext, playPrev, audioRef } = usePlayer();
     const [progress, setProgress] = useState(0);
 
-    // update progress bar
+
     useEffect(() => {
         const audio = audioRef.current;
 

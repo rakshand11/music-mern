@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from '../aiosInstance';
 import { useParams } from "react-router-dom";
 import { Play, Trash2, Plus, X, Search, Clock } from "lucide-react";
 import toast from "react-hot-toast";
@@ -27,30 +27,24 @@ const Playlist = () => {
     const [allSongs, setAllSongs] = useState<Song[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const { playQueue } = usePlayer() // ✅ changed from playSong to playQueue
+    const { playQueue } = usePlayer()
 
-    // schedule states
     const [showSchedule, setShowSchedule] = useState(false);
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
     const [scheduledTime, setScheduledTime] = useState("");
 
-    // fetch playlist
     const fetchPlaylist = async () => {
         try {
-            const res = await axios.get(
-                `http://localhost:3000/playlist/get/${playlistId}`,
-                { withCredentials: true }
-            );
+            const res = await api.get(`/playlist/get/${playlistId}`)
             setPlaylist(res.data.playlist);
         } catch (error) {
             console.log(error);
         }
     };
 
-    // fetch all songs for modal
     const fetchAllSongs = async () => {
         try {
-            const res = await axios.get("http://localhost:3000/song/get-all");
+            const res = await api.get("/song/get-all")
             setAllSongs(res.data.songs);
         } catch (error) {
             console.log(error);
@@ -62,14 +56,9 @@ const Playlist = () => {
         fetchAllSongs();
     }, [playlistId]);
 
-    // add song to playlist
     const handleAddSong = async (songId: string) => {
         try {
-            await axios.post(
-                `http://localhost:3000/playlist/add-song/${playlistId}`,
-                { songs: songId },
-                { withCredentials: true }
-            );
+            await api.post(`/playlist/add-song/${playlistId}`, { songs: songId })
             toast.success("Song added to playlist!");
             fetchPlaylist();
             setShowModal(false);
@@ -78,13 +67,9 @@ const Playlist = () => {
         }
     };
 
-    // remove song from playlist
     const handleRemoveSong = async (songId: string) => {
         try {
-            await axios.delete(
-                `http://localhost:3000/playlist/remove-song/${playlistId}`,
-                { data: { songs: songId }, withCredentials: true }
-            );
+            await api.delete(`/playlist/remove-song/${playlistId}`, { data: { songs: songId } })
             toast.success("Song removed!");
             fetchPlaylist();
         } catch (error: any) {
@@ -92,18 +77,13 @@ const Playlist = () => {
         }
     };
 
-    // schedule song
     const handleSchedule = async () => {
         if (!selectedSong || !scheduledTime) {
             toast.error("Please select a time");
             return;
         }
         try {
-            await axios.post(
-                "http://localhost:3000/schedule/create",
-                { song: selectedSong._id, scheduledTime },
-                { withCredentials: true }
-            );
+            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime })
             toast.success("Song scheduled!");
             setShowSchedule(false);
             setScheduledTime("");
@@ -113,7 +93,6 @@ const Playlist = () => {
         }
     };
 
-    // filter songs in modal
     const filteredSongs = allSongs.filter(
         (s) =>
             s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,7 +108,6 @@ const Playlist = () => {
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-800 to-gray-900 p-8">
 
-            {/* Playlist Header */}
             <div className="flex items-end gap-8 mb-10">
                 <img
                     src={playlist.coverImage || "https://via.placeholder.com/200"}
@@ -143,7 +121,6 @@ const Playlist = () => {
                 </div>
             </div>
 
-            {/* Add Songs Button */}
             <button
                 onClick={() => setShowModal(true)}
                 className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full font-semibold mb-8 transition"
@@ -152,7 +129,6 @@ const Playlist = () => {
                 Add Songs
             </button>
 
-            {/* Songs List */}
             <div className="space-y-2">
                 {playlist.songs.length === 0 ? (
                     <p className="text-gray-500 text-center py-10">No songs yet — add some!</p>
@@ -162,31 +138,26 @@ const Playlist = () => {
                             key={song._id}
                             className="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 transition group"
                         >
-                            {/* Index / Play */}
                             <span className="text-gray-500 w-6 text-center group-hover:hidden">{index + 1}</span>
                             <Play
                                 size={16}
                                 className="text-green-500 hidden group-hover:block w-6 cursor-pointer"
-                                onClick={() => playQueue(playlist.songs, index)} // ✅ updated
+                                onClick={() => playQueue(playlist.songs, index)}
                             />
 
-                            {/* Image */}
                             <img
                                 src={song.imageUrl || "https://via.placeholder.com/50"}
                                 alt={song.title}
                                 className="w-12 h-12 rounded-lg object-cover"
                             />
 
-                            {/* Info */}
                             <div className="flex-1">
                                 <p className="text-white font-medium">{song.title}</p>
                                 <p className="text-gray-400 text-sm">{song.artist}</p>
                             </div>
 
-                            {/* Duration */}
                             <span className="text-gray-400 text-sm">{song.duration}s</span>
 
-                            {/* Actions */}
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
                                 <button
                                     onClick={() => { setSelectedSong(song); setShowSchedule(true); }}
@@ -209,11 +180,9 @@ const Playlist = () => {
                 )}
             </div>
 
-            {/* Add Songs Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
-
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-white">Add Songs</h2>
                             <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
@@ -256,11 +225,9 @@ const Playlist = () => {
                 </div>
             )}
 
-            {/* Schedule Modal */}
             {showSchedule && selectedSong && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
                     <div className="bg-gray-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-white">Schedule Song</h2>
                             <button onClick={() => setShowSchedule(false)} className="text-gray-400 hover:text-white">

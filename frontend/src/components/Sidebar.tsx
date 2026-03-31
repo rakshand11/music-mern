@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import {
     Play,
@@ -12,6 +11,8 @@ import {
 } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import toast from "react-hot-toast";
+import api from "../aiosInstance";
+
 
 type Playlist = {
     _id: string;
@@ -27,9 +28,7 @@ type Song = {
     duration: number;
 };
 
-interface SidebarProps { }
-
-const Sidebar: React.FC<SidebarProps> = () => {
+const Sidebar: React.FC = () => {
     const navigate = useNavigate();
     const { playSong } = usePlayer();
 
@@ -45,13 +44,9 @@ const Sidebar: React.FC<SidebarProps> = () => {
     const fetchPlaylists = useCallback(async () => {
         if (!user?._id) return;
         try {
-            const res = await axios.get<{ playlists: Playlist[] }>(
-                "http://localhost:3000/playlist/get-allplaylist",
-                { withCredentials: true }
-            );
+            const res = await api.get("/playlist/get-allplaylist");
             setPlaylists(res.data.playlists);
         } catch (error) {
-            console.error("Failed to fetch playlists:", error);
             toast.error("Failed to load playlists");
         }
     }, [user?._id]);
@@ -61,9 +56,15 @@ const Sidebar: React.FC<SidebarProps> = () => {
     }, [fetchPlaylists]);
 
     useEffect(() => {
-        const recent = JSON.parse(localStorage.getItem("recentSongs") || "[]") as Song[];
-        setRecentSongs(recent.slice(0, 5));
-    }, []);
+        const load = () => {
+            const updated = JSON.parse(localStorage.getItem("recentSongs") || "[]") as Song[]
+            setRecentSongs(updated.slice(0, 5))
+        }
+
+        load() // load on mount
+        window.addEventListener("storage-recent-update", load)
+        return () => window.removeEventListener("storage-recent-update", load)
+    }, [])
 
     useEffect(() => {
         const liked = JSON.parse(localStorage.getItem("likedSongs") || "[]") as Song[];
@@ -103,12 +104,19 @@ const Sidebar: React.FC<SidebarProps> = () => {
         >
             <Icon
                 size={20}
-                className={`${active ? "text-emerald-400 drop-shadow-lg" : "text-gray-300 group-hover:text-white"} transition-colors`}
+                className={`${active
+                    ? "text-emerald-400 drop-shadow-lg"
+                    : "text-gray-300 group-hover:text-white"
+                    } transition-colors`}
             />
             <span
-                className={`font-medium text-sm transition-all 
-          ${active ? "text-white" : "text-gray-300 group-hover:text-white"} 
-          ${isExpanded ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none"}`}
+                className={`font-medium text-sm transition-all ${active
+                    ? "text-white"
+                    : "text-gray-300 group-hover:text-white"
+                    } ${isExpanded
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 translate-x-2 pointer-events-none"
+                    }`}
             >
                 {label}
             </span>
@@ -136,12 +144,15 @@ const Sidebar: React.FC<SidebarProps> = () => {
                         <Music size={24} className="text-white drop-shadow-lg" />
                     </div>
                     <div
-                        className={`flex flex-col overflow-hidden transition-all ${isExpanded ? "w-48" : "w-0"}`}
+                        className={`flex flex-col overflow-hidden transition-all ${isExpanded ? "w-48" : "w-0"
+                            }`}
                     >
                         <h1 className="text-xl font-black bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent drop-shadow-lg">
                             MusicTune
                         </h1>
-                        <p className="text-xs text-purple-400 font-medium">Premium Sound</p>
+                        <p className="text-xs text-purple-400 font-medium">
+                            Premium Sound
+                        </p>
                     </div>
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
@@ -167,16 +178,20 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
                 {user && (
                     <>
-                        {/* Liked Songs */}
                         <NavItem
                             icon={Heart}
                             label="Liked Songs"
-                            badge={likedSongsCount > 0 ? likedSongsCount : undefined}
+                            badge={
+                                likedSongsCount > 0
+                                    ? likedSongsCount
+                                    : undefined
+                            }
                             to="/liked-songs"
-                            active={window.location.pathname === "/liked-songs"}
+                            active={
+                                window.location.pathname === "/liked-songs"
+                            }
                         />
 
-                        {/* My Playlists */}
                         <div className={`${isExpanded ? "block" : "hidden"}`}>
                             <div className="flex items-center justify-between mb-3 px-1">
                                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -193,7 +208,9 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
                             {playlists.length === 0 ? (
                                 <div className="text-center py-4">
-                                    <p className="text-gray-500 text-xs">No playlists yet</p>
+                                    <p className="text-gray-500 text-xs">
+                                        No playlists yet
+                                    </p>
                                     <button
                                         onClick={handleCreatePlaylist}
                                         className="mt-2 text-emerald-400 text-xs font-medium hover:underline flex items-center justify-center gap-1 mx-auto"
@@ -209,7 +226,10 @@ const Sidebar: React.FC<SidebarProps> = () => {
                                             icon={Music}
                                             label={playlist.name}
                                             to={`/playlist/${playlist._id}`}
-                                            active={window.location.pathname === `/playlist/${playlist._id}`}
+                                            active={
+                                                window.location.pathname ===
+                                                `/playlist/${playlist._id}`
+                                            }
                                         />
                                     ))}
                                     {playlists.length > 4 && (
@@ -224,7 +244,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
                             )}
                         </div>
 
-                        {/* Recently Played */}
                         <div className={`${isExpanded ? "block" : "hidden"}`}>
                             <div className="flex items-center justify-between mb-2 px-1">
                                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
@@ -234,16 +253,23 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
                             <div className="space-y-1.5 max-h-80 overflow-y-auto custom-scrollbar">
                                 {recentSongs.length === 0 ? (
-                                    <p className="text-gray-500 text-xs px-1">No recent songs</p>
+                                    <p className="text-gray-500 text-xs px-1">
+                                        No recent songs
+                                    </p>
                                 ) : (
                                     recentSongs.map((song) => (
                                         <div
                                             key={song._id}
-                                            onClick={() => handlePlayRecentSong(song)}
+                                            onClick={() =>
+                                                handlePlayRecentSong(song)
+                                            }
                                             className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-emerald-500/10 hover:to-teal-500/10 hover:shadow-md hover:shadow-emerald-500/20 cursor-pointer transition-all group border border-transparent hover:border-emerald-400/30 backdrop-blur-sm"
                                         >
                                             <img
-                                                src={song.imageUrl || "https://via.placeholder.com/36?text=?"}
+                                                src={
+                                                    song.imageUrl ||
+                                                    "https://via.placeholder.com/36?text=?"
+                                                }
                                                 alt={song.title}
                                                 className="w-9 h-9 rounded-lg object-cover shadow-md ring-1 ring-white/20 group-hover:ring-emerald-400/30 transition-all"
                                             />
@@ -251,7 +277,9 @@ const Sidebar: React.FC<SidebarProps> = () => {
                                                 <p className="text-sm font-medium text-white truncate group-hover:text-emerald-300 transition-colors">
                                                     {song.title}
                                                 </p>
-                                                <p className="text-xs text-gray-400 truncate">{song.artist}</p>
+                                                <p className="text-xs text-gray-400 truncate">
+                                                    {song.artist}
+                                                </p>
                                             </div>
                                             <Play
                                                 size={14}
@@ -266,7 +294,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
                 )}
             </div>
 
-            {/* Guest state – only shown when not logged in */}
             {!user && (
                 <div className="p-4 border-t border-white/10 sticky bottom-0 bg-black/30 backdrop-blur-sm z-10">
                     <div className="text-center space-y-2">
