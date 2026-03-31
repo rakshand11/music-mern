@@ -1,14 +1,21 @@
 import cron from "node-cron";
+import { scheduleModel } from "../model/schedule.model.js";
+import { io, userSocketMap } from "../index.js";
 
 export const startScheduleCron = () => {
     cron.schedule("* * * * *", async () => {
         try {
             const now = new Date();
-            
+
+
+            console.log(`🕐 Cron check: ${now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`);
+
             const dueSchedules = await scheduleModel
                 .find({ isActive: true })
                 .populate("song")
                 .populate("listener");
+
+            console.log(`📊 Active schedules found: ${dueSchedules.length}`);
 
             for (const schedule of dueSchedules) {
                 const scheduledTime = new Date(schedule.scheduledTime);
@@ -24,13 +31,16 @@ export const startScheduleCron = () => {
                     const userId = (schedule.listener as any)._id.toString();
                     const socketId = userSocketMap.get(userId);
 
-                    console.log(`🎵 Firing schedule for user: ${userId}`);
 
-                    if (socketId) {
+                    const isSocketActive = socketId && io.sockets.sockets.has(socketId);
+
+                    console.log(`🎵 Firing for user: ${userId} | Socket: ${socketId} | Active: ${isSocketActive}`);
+
+                    if (isSocketActive) {
                         io.to(socketId).emit("play-song", { song: schedule.song });
-                        console.log(`✅ Emitted play-song to socket: ${socketId}`);
+                        console.log(`✅ Emitted to ACTIVE socket: ${socketId}`);
                     } else {
-                        console.log(`⚠️ User ${userId} is not connected`);
+                        console.log(`⏸️ User ${userId} OFFLINE - skipping`);
                     }
 
                     schedule.isActive = false;
@@ -44,5 +54,5 @@ export const startScheduleCron = () => {
         timezone: "Asia/Kolkata"
     });
 
-    console.log("✅ Schedule cron job started (Asia/Kolkata timezone)");
+    console.log("✅ Schedule cron started (Asia/Kolkata) - Enhanced logging");
 };
