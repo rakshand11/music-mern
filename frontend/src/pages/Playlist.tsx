@@ -83,7 +83,8 @@ const Playlist = () => {
             return;
         }
         try {
-            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime })
+            const utcTime = new Date(scheduledTime).toISOString()
+            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime: utcTime })
             toast.success("Song scheduled!");
             setShowSchedule(false);
             setScheduledTime("");

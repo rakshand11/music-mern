@@ -86,7 +86,8 @@ const Home: React.FC<HomeProps> = () => {
             return
         }
         try {
-            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime }) // 👈
+            const utcTime = new Date(scheduledTime).toISOString()
+            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime: utcTime })
             toast.success("Song scheduled!")
             setShowSchedule(false)
             setScheduledTime("")
@@ -95,7 +96,6 @@ const Home: React.FC<HomeProps> = () => {
             toast.error(error.response?.data?.msg || "Failed to schedule")
         }
     }, [selectedSong, scheduledTime])
-
     const handlePlaySong = useCallback((index: number) => {
         playQueue(songs, index)
     }, [playQueue, songs])
