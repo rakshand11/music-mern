@@ -1,12 +1,10 @@
 import cron from "node-cron";
-import { scheduleModel } from "../model/schedule.model.js";
-import { io, userSocketMap } from "../index.js";
 
 export const startScheduleCron = () => {
     cron.schedule("* * * * *", async () => {
         try {
             const now = new Date();
-
+            
             const dueSchedules = await scheduleModel
                 .find({ isActive: true })
                 .populate("song")
@@ -23,27 +21,28 @@ export const startScheduleCron = () => {
                     scheduledTime.getMinutes() === now.getMinutes();
 
                 if (isSameMinute) {
-                    const userId = (schedule.listener as any)._id.toString()
-                    const socketId = userSocketMap.get(userId)
+                    const userId = (schedule.listener as any)._id.toString();
+                    const socketId = userSocketMap.get(userId);
 
-                    console.log(`🎵 Firing schedule for user: ${userId}`)
+                    console.log(`🎵 Firing schedule for user: ${userId}`);
 
                     if (socketId) {
-                        io.to(socketId).emit("play-song", { song: schedule.song })
-                        console.log(`✅ Emitted play-song to socket: ${socketId}`)
+                        io.to(socketId).emit("play-song", { song: schedule.song });
+                        console.log(`✅ Emitted play-song to socket: ${socketId}`);
                     } else {
-                        console.log(`⚠️ User ${userId} is not connected`)
+                        console.log(`⚠️ User ${userId} is not connected`);
                     }
 
-
-                    schedule.isActive = false
-                    await schedule.save()
+                    schedule.isActive = false;
+                    await schedule.save();
                 }
             }
         } catch (error) {
             console.error("Cron job error:", error);
         }
+    }, {
+        timezone: "Asia/Kolkata"
     });
 
-    console.log("✅ Schedule cron job started");
+    console.log("✅ Schedule cron job started (Asia/Kolkata timezone)");
 };
