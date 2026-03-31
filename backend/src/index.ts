@@ -17,17 +17,18 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT
 
+const allowedOrigins = process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL, "http://localhost:5173"]
+    : ["http://localhost:5173"]
 
 const httpServer = createServer(app)
 
-
 export const io = new Server(httpServer, {
     cors: {
-        origin: ["http://localhost:5173"],
+        origin: allowedOrigins, 
         credentials: true
     }
 })
-
 
 export const userSocketMap = new Map<string, string>()
 
@@ -70,11 +71,20 @@ connectCloudinary()
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: ["http://localhost:5173"],
+    origin: allowedOrigins, 
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }))
+
+
+if (process.env.NODE_ENV === "production") {
+    setInterval(() => {
+        fetch(`${process.env.BACKEND_URL}/`)
+            .then(() => console.log("🏓 Keep-alive ping"))
+            .catch(() => console.log("⚠️ Keep-alive failed"))
+    }, 10 * 60 * 1000)
+}
 
 app.get(("/"), (req: Request, res: Response) => {
     res.send("hello")
@@ -84,7 +94,6 @@ app.use("/user", userRouter)
 app.use("/song", songRouter)
 app.use("/playlist", playlistRoute)
 app.use("/schedule", scheduleRouter)
-
 
 httpServer.listen(PORT, () => {
     console.log(`server is running on port ${PORT}`)

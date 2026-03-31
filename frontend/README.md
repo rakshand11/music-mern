@@ -30,13 +30,13 @@ A modern music streaming web app built with React and TypeScript.
 
 ```bash
 git clone https://github.com/rakshand11/music-mern.git
-cd music-app-frontend
+cd music-app
 npm install
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the root:
+Create a `.env` file in the frontend root:
 
 ```bash
 VITE_BACKEND_URL=http://localhost:3000
@@ -58,9 +58,10 @@ src/
 ├── pages/            # App pages
 ├── context/          # PlayerContext
 ├── socket.ts         # Socket.IO connection
-└── axiosInstance.ts  # Axios base config
+└── aiosInstance.ts   # Axios base config
 ```
 
 ## Live Demo
 
-[musictune.com](https://musictune.com)
+- Frontend: [music-mern-wx89.vercel.app](https://music-mern-wx89.vercel.app)
+- Backend API: [music-mern-qwkz.onrender.com](https://music-mern-qwkz.onrender.com)
