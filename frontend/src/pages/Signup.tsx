@@ -55,6 +55,7 @@ const Signup: React.FC = () => {
             setUser(login.data.user);
             localStorage.removeItem("recentSongs")
             localStorage.setItem("user", JSON.stringify(login.data.user));
+            window.dispatchEvent(new Event("user-logged-in"))
 
             toast.success("Registered successfully");
             navigate("/");

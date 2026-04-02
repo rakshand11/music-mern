@@ -36,6 +36,7 @@ export const loginUser = async (req: Request, res: Response) => {
             res.status(400).json({ msg: "Password too long" })
             return
         }
+
         const user = await userModel.findOne({ email })
         if (!user) {
             res.status(400).json({ msg: "User not available" })
@@ -46,8 +47,8 @@ export const loginUser = async (req: Request, res: Response) => {
         if (!passwordValidation) {
             res.status(401).json({ msg: "Invalid credentials" })
             return
-
         }
+
         const token = jwt.sign({ userId: user._id }, jwtSecret, { expiresIn: "30d" })
         res.cookie("userToken", token, {
             httpOnly: true,
@@ -55,7 +56,18 @@ export const loginUser = async (req: Request, res: Response) => {
             secure: true,
             maxAge: 30 * 24 * 60 * 60 * 1000
         })
-        res.status(200).json({ msg: "User logged in successfully", user })
+
+        // ✅ Return explicit fields including role
+        res.status(200).json({
+            msg: "User logged in successfully",
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar,
+                role: user.role   // 👈 role now included
+            }
+        })
         return
     } catch (error) {
         console.log("error", error)
@@ -73,9 +85,7 @@ export const updateUser = async (req: Request, res: Response) => {
             name, avatar
         }, { returnDocument: "after" })
         if (!user) {
-            res.status(401).json({
-                msg: "User not found"
-            })
+            res.status(401).json({ msg: "User not found" })
             return
         }
         res.status(200).json({
@@ -84,14 +94,13 @@ export const updateUser = async (req: Request, res: Response) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar
+                avatar: user.avatar,
+                role: user.role   // 👈 role included here too
             }
         })
         return
     } catch (error) {
-        res.status(500).json({
-            msg: "Internal server error"
-        })
+        res.status(500).json({ msg: "Internal server error" })
     }
 }
 
@@ -109,27 +118,7 @@ export const logoutUser = async (req: Request, res: Response) => {
     }
 }
 
-export const adminLogin = async (req: Request, res: Response) => {
-    try {
-        const { email, password } = req.body
-        const adminEmail = process.env.ADMIN_EMAIL
-        const adminPassword = process.env.ADMIN_PASSWORD
-        if (email !== adminEmail || password !== adminPassword) {
-            res.status(401).json({ msg: "Invalid admin credentials" })
-            return
-        }
-        const token = jwt.sign({ role: "admin", email }, jwtSecret, { expiresIn: "1d" })
-        res.cookie("adminToken", token, {
-            httpOnly: true,
-            sameSite: "none",
-            secure: true,
-            maxAge: 24 * 60 * 60 * 1000
-        })
-        res.status(200).json({ msg: "Admin logged in successfully", admin: { email, role: "admin" } })
-    } catch (error) {
-        res.status(500).json({ msg: "Internal server error" })
-    }
-}
+
 
 export const toggleLikeSong = async (req: Request, res: Response) => {
     try {
@@ -145,14 +134,12 @@ export const toggleLikeSong = async (req: Request, res: Response) => {
         const alreadyLiked = user.likedSongs.includes(songId as any)
 
         if (alreadyLiked) {
-
             user.likedSongs = user.likedSongs.filter(
                 (id) => id.toString() !== songId
             ) as any
             await user.save()
             res.status(200).json({ msg: "Song unliked", liked: false })
         } else {
-
             user.likedSongs.push(songId as any)
             await user.save()
             res.status(200).json({ msg: "Song liked", liked: true })

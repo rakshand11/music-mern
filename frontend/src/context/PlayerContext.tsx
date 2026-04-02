@@ -34,7 +34,6 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const audioRef = useRef<HTMLAudioElement>(new Audio());
 
-
     const saveRecentSong = (song: Song) => {
         const recent = JSON.parse(localStorage.getItem("recentSongs") || "[]")
         const filtered = recent.filter((s: Song) => s._id !== song._id)
@@ -43,13 +42,13 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         window.dispatchEvent(new Event("storage-recent-update"))
     }
 
-    useEffect(() => {
+
+    const connectUserSocket = () => {
         const storedUser = localStorage.getItem("user")
         if (!storedUser) return
 
         const user = JSON.parse(storedUser)
         const userId = user._id
-
         if (!userId) return
 
         const socket = connectSocket(userId)
@@ -62,10 +61,21 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
             setIsPlaying(true)
             saveRecentSong(song)
         })
+    }
+
+    useEffect(() => {
+        connectUserSocket()
+
+        const handleUserLoggedIn = () => {
+            disconnectSocket()
+            connectUserSocket()
+        }
+
+        window.addEventListener("user-logged-in", handleUserLoggedIn)
 
         return () => {
-            socket.off("play-song")
             disconnectSocket()
+            window.removeEventListener("user-logged-in", handleUserLoggedIn)
         }
     }, [])
 

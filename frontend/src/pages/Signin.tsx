@@ -7,7 +7,6 @@ import MusicBackground from "../components/MusicAnimation";
 
 const Signin: React.FC = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState<any>();
     const [loading, setLoading] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [formData, setFormData] = useState({
@@ -48,12 +47,20 @@ const Signin: React.FC = () => {
                 password: formData.password
             });
 
-            setUser(res.data.user);
-            localStorage.removeItem("recentSongs") // ✅
-            localStorage.setItem("user", JSON.stringify(res.data.user));
+            const user = res.data.user;
+            localStorage.removeItem("recentSongs");
+            localStorage.setItem("user", JSON.stringify(user));
+            window.dispatchEvent(new Event("user-logged-in"));
 
             toast.success("Logged in successfully");
-            navigate("/");
+
+            // ✅ Redirect based on role
+            if (user.role === "admin") {
+                navigate("/admin");
+            } else {
+                navigate("/");
+            }
+
         } catch (error: any) {
             toast.error(error.response?.data?.msg || "Login failed");
         } finally {

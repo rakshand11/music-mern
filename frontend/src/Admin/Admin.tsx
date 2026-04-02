@@ -32,8 +32,8 @@ const Admin = () => {
     })
 
     useEffect(() => {
-        const admin = JSON.parse(localStorage.getItem("admin") || "null")
-        if (!admin) navigate("/admin/login")
+        const user = JSON.parse(localStorage.getItem("user") || "null");
+        if (!user || user.role !== "admin") navigate("/signin");
     }, [])
 
     useEffect(() => {
