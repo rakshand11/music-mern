@@ -18,15 +18,25 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT
 
-const allowedOrigins = process.env.FRONTEND_URL
-    ? [process.env.FRONTEND_URL, "http://localhost:5173"]
-    : ["http://localhost:5173"]
+// ✅ dynamic origin check — allows any localhost port + production URL
+const isOriginAllowed = (origin: string | undefined): boolean => {
+    if (!origin) return true
+    if (origin.startsWith("http://localhost:")) return true
+    if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) return true
+    return false
+}
 
 const httpServer = createServer(app)
 
 export const io = new Server(httpServer, {
     cors: {
-        origin: allowedOrigins,
+        origin: (origin, callback) => {
+            if (isOriginAllowed(origin)) {
+                callback(null, true)
+            } else {
+                callback(new Error("Not allowed by CORS"))
+            }
+        },
         credentials: true
     },
     pingTimeout: 60000,
@@ -39,10 +49,10 @@ io.on("connection", async (socket) => {
     const userId = socket.handshake.query.userId as string
 
     if (userId) {
-
+        // ✅ always update with latest socket id on reconnect
         userSocketMap.set(userId, socket.id)
 
-
+        // ✅ save to DB so cron can find it
         await userModel.findByIdAndUpdate(userId, { socketId: socket.id })
 
         console.log(`🟢 User connected: ${userId} → socket: ${socket.id}`)
@@ -52,11 +62,13 @@ io.on("connection", async (socket) => {
         if (userId) {
             if (userSocketMap.get(userId) === socket.id) {
                 userSocketMap.delete(userId)
+
+                // ✅ only clear DB if this socket is still the current one
+                await userModel.findOneAndUpdate(
+                    { _id: userId, socketId: socket.id },
+                    { socketId: null }
+                )
             }
-
-
-            await userModel.findByIdAndUpdate(userId, { socketId: null })
-
             console.log(`🔴 User disconnected: ${userId}`)
         }
     })
@@ -87,8 +99,16 @@ connectCloudinary()
 
 app.use(express.json())
 app.use(cookieParser())
+
+// ✅ dynamic CORS for express routes too
 app.use(cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) {
+            callback(null, true)
+        } else {
+            callback(new Error("Not allowed by CORS"))
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]

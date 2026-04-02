@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
-import { Play, Clock, X, Heart, Search } from 'lucide-react'
+import { Play, Clock, X, Heart } from 'lucide-react'
 import { usePlayer } from '../context/PlayerContext'
 import toast from 'react-hot-toast'
 import api from '../aiosInstance'
@@ -31,7 +31,7 @@ const Home: React.FC<HomeProps> = () => {
     const fetchSongs = useCallback(async () => {
         try {
             setLoading(true)
-            const res = await api.get<{ songs: Song[] }>("/song/get-all") // 👈
+            const res = await api.get<{ songs: Song[] }>("/song/get-all")
             setSongs(res.data.songs)
         } catch (error) {
             console.error('Failed to fetch songs:', error)
@@ -44,7 +44,7 @@ const Home: React.FC<HomeProps> = () => {
     const fetchLikedSongs = useCallback(async () => {
         if (!user?._id) return
         try {
-            const res = await api.get<{ songs: { _id: string }[] }>("/user/liked-songs") // 👈
+            const res = await api.get<{ songs: { _id: string }[] }>("/user/liked-songs")
             const ids = res.data.songs.map((s: { _id: string }) => s._id)
             setLikedSongs(ids)
         } catch (error) {
@@ -67,7 +67,7 @@ const Home: React.FC<HomeProps> = () => {
             return
         }
         try {
-            const res = await api.post<{ liked: boolean }>(`/user/like/${songId}`, {}) // 👈
+            const res = await api.post<{ liked: boolean }>(`/user/like/${songId}`, {})
             if (res.data.liked) {
                 setLikedSongs(prev => [...prev, songId])
                 toast.success("Added to liked songs ❤️")
@@ -86,8 +86,20 @@ const Home: React.FC<HomeProps> = () => {
             return
         }
         try {
-            const utcTime = new Date(scheduledTime).toISOString()
-            await api.post("/schedule/create", { song: selectedSong._id, scheduledTime: utcTime })
+            // ✅ datetime-local gives local time string, convert to UTC ISO
+            const localDate = new Date(scheduledTime)
+            localDate.setMinutes(localDate.getMinutes() + 1)
+            const utcTime = localDate.toISOString()
+
+            // ✅ debug logs to verify times
+            console.log("📅 Input (local):", scheduledTime)
+            console.log("📅 Sent to server (UTC):", utcTime)
+            console.log("📅 Diff from now (seconds):", Math.round((localDate.getTime() - Date.now()) / 1000))
+
+            await api.post("/schedule/create", {
+                song: selectedSong._id,
+                scheduledTime: utcTime
+            })
             toast.success("Song scheduled!")
             setShowSchedule(false)
             setScheduledTime("")
@@ -96,6 +108,7 @@ const Home: React.FC<HomeProps> = () => {
             toast.error(error.response?.data?.msg || "Failed to schedule")
         }
     }, [selectedSong, scheduledTime])
+
     const handlePlaySong = useCallback((index: number) => {
         playQueue(songs, index)
     }, [playQueue, songs])
@@ -105,6 +118,13 @@ const Home: React.FC<HomeProps> = () => {
         setSelectedSong(song)
         setShowSchedule(true)
     }, [])
+
+    // ✅ min time for datetime-local input (current time in local format)
+    const getMinTime = () => {
+        const now = new Date()
+        now.setSeconds(0, 0)
+        return now.toISOString().slice(0, 16)
+    }
 
     return (
         <div className='flex bg-gradient-to-br from-black via-gray-900 to-purple-900/20 min-h-screen overflow-hidden'>
@@ -157,6 +177,7 @@ const Home: React.FC<HomeProps> = () => {
                 <ScheduleModal
                     song={selectedSong}
                     scheduledTime={scheduledTime}
+                    minTime={getMinTime()}
                     onChangeTime={setScheduledTime}
                     onClose={() => {
                         setShowSchedule(false)
@@ -245,6 +266,7 @@ const SongCard: React.FC<SongCardProps> = React.memo(({
 interface ScheduleModalProps {
     song: Song
     scheduledTime: string
+    minTime: string          // ✅ added
     onChangeTime: (time: string) => void
     onClose: () => void
     onSchedule: () => void
@@ -253,6 +275,7 @@ interface ScheduleModalProps {
 const ScheduleModal: React.FC<ScheduleModalProps> = React.memo(({
     song,
     scheduledTime,
+    minTime,
     onChangeTime,
     onClose,
     onSchedule
@@ -293,6 +316,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = React.memo(({
                 <input
                     type="datetime-local"
                     value={scheduledTime}
+                    min={minTime}          // ✅ prevents selecting past time
                     onChange={(e) => onChangeTime(e.target.value)}
                     className="w-full bg-gray-800/50 border border-gray-600 hover:border-purple-400 focus:border-purple-500 rounded-2xl px-5 py-4 text-white font-medium focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all shadow-lg backdrop-blur-sm"
                 />

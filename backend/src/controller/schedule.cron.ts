@@ -19,20 +19,25 @@ export const startScheduleCron = () => {
             for (const schedule of dueSchedules) {
                 const scheduledTime = new Date(schedule.scheduledTime);
 
-                const diff = Math.abs(scheduledTime.getTime() - now.getTime());
-                const isSameMinute = diff < 60000;
+                // ✅ fire if within 5s before or 60s after scheduled time
+                const diff = now.getTime() - scheduledTime.getTime();
+                const isSameMinute = diff >= -65000 && diff < 60000;
+                console.log(`🔍 Checking: ${scheduledTime.toISOString()} | diff: ${Math.round(diff / 1000)}s | match: ${isSameMinute}`)
 
                 if (isSameMinute) {
                     const userId = (schedule.listener as any)._id.toString();
 
+                    console.log(`⏰ Scheduled time (UTC): ${scheduledTime.toISOString()}`)
+                    console.log(`⏰ Now (UTC): ${now.toISOString()}`)
+                    console.log(`⏰ Diff in seconds: ${Math.round(diff / 1000)}s`)
 
                     const user = await userModel.findById(userId)
                     const socketId = user?.socketId
-                    const isSocketActive = socketId && io.sockets.sockets.has(socketId);
 
-                    console.log(`🎵 Firing for user: ${userId} | Socket: ${socketId} | Active: ${isSocketActive}`);
+                    console.log(`🔌 Total connected sockets: ${io.sockets.sockets.size}`)
+                    console.log(`🎵 Firing for user: ${userId} | Socket: ${socketId}`);
 
-                    if (isSocketActive && socketId) {
+                    if (socketId) {
                         io.to(socketId).emit("play-song", { song: schedule.song });
                         console.log(`✅ Emitted play-song to socket: ${socketId}`);
                     } else {
@@ -46,9 +51,6 @@ export const startScheduleCron = () => {
         } catch (error) {
             console.error("Cron job error:", error);
         }
-    }, {
-        timezone: "Asia/Kolkata"
     });
 
-    console.log("✅ Schedule cron started (Asia/Kolkata)");
 };
