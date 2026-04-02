@@ -86,19 +86,22 @@ const Home: React.FC<HomeProps> = () => {
             return
         }
         try {
-            // ✅ datetime-local gives local time string, convert to UTC ISO
+            const istOffset = 5.5 * 60 * 60 * 1000
             const localDate = new Date(scheduledTime)
-            localDate.setMinutes(localDate.getMinutes() + 1)
-            const utcTime = localDate.toISOString()
+            const utcTime = new Date(localDate.getTime() - istOffset)
 
-            // ✅ debug logs to verify times
             console.log("📅 Input (local):", scheduledTime)
-            console.log("📅 Sent to server (UTC):", utcTime)
-            console.log("📅 Diff from now (seconds):", Math.round((localDate.getTime() - Date.now()) / 1000))
+            console.log("📅 Sent to server (UTC):", utcTime.toISOString())
+            console.log("📅 Diff from now (seconds):", Math.round((utcTime.getTime() - Date.now()) / 1000))
+
+            if (utcTime.getTime() < Date.now()) {
+                toast.error("Please select a future time")
+                return
+            }
 
             await api.post("/schedule/create", {
                 song: selectedSong._id,
-                scheduledTime: utcTime
+                scheduledTime: utcTime.toISOString()
             })
             toast.success("Song scheduled!")
             setShowSchedule(false)
@@ -119,11 +122,13 @@ const Home: React.FC<HomeProps> = () => {
         setShowSchedule(true)
     }, [])
 
-    // ✅ min time for datetime-local input (current time in local format)
+
     const getMinTime = () => {
         const now = new Date()
-        now.setSeconds(0, 0)
-        return now.toISOString().slice(0, 16)
+        const istOffset = 5.5 * 60 * 60 * 1000
+        const istNow = new Date(now.getTime() + istOffset)
+        istNow.setSeconds(0, 0)
+        return istNow.toISOString().slice(0, 16)
     }
 
     return (
