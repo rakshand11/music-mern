@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { scheduleModel } from "../model/schedule.model.js";
-import { io, userSocketMap } from "../index.js";
+import { userModel } from "../model/user.model.js";
+import { io } from "../index.js";
 
 export const startScheduleCron = () => {
     cron.schedule("* * * * *", async () => {
@@ -18,29 +19,26 @@ export const startScheduleCron = () => {
             for (const schedule of dueSchedules) {
                 const scheduledTime = new Date(schedule.scheduledTime);
 
-                // ✅ check within same minute
-                const isSameMinute =
-                    scheduledTime.getFullYear() === now.getFullYear() &&
-                    scheduledTime.getMonth() === now.getMonth() &&
-                    scheduledTime.getDate() === now.getDate() &&
-                    scheduledTime.getHours() === now.getHours() &&
-                    scheduledTime.getMinutes() === now.getMinutes();
+                const diff = Math.abs(scheduledTime.getTime() - now.getTime());
+                const isSameMinute = diff < 60000;
 
                 if (isSameMinute) {
                     const userId = (schedule.listener as any)._id.toString();
-                    const socketId = userSocketMap.get(userId);
+
+
+                    const user = await userModel.findById(userId)
+                    const socketId = user?.socketId
                     const isSocketActive = socketId && io.sockets.sockets.has(socketId);
 
                     console.log(`🎵 Firing for user: ${userId} | Socket: ${socketId} | Active: ${isSocketActive}`);
 
-                    if (isSocketActive) {
+                    if (isSocketActive && socketId) {
                         io.to(socketId).emit("play-song", { song: schedule.song });
                         console.log(`✅ Emitted play-song to socket: ${socketId}`);
                     } else {
                         console.log(`⏸️ User ${userId} is OFFLINE — skipping`);
                     }
 
-                    // ✅ deactivate after firing
                     schedule.isActive = false;
                     await schedule.save();
                 }

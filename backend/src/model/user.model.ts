@@ -7,7 +7,8 @@ const userSchema = new Schema(
         password: { type: String, required: true },
         avatar: { type: String, default: "" },
         likedSongs: [{ type: Schema.Types.ObjectId, ref: "song", default: [] }],
-        role: { type: String, enum: ["user", "admin"], default: "user" }
+        role: { type: String, enum: ["user", "admin"], default: "user" },
+        socketId: { type: String, default: null },
     },
     { timestamps: true },
 );

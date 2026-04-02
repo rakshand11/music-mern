@@ -11,6 +11,7 @@ import { cloudinary } from "./middleware/cloudinary.js"
 import { createServer } from "http"
 import { Server } from "socket.io"
 import { startScheduleCron } from "./controller/schedule.cron.js"
+import { userModel } from "./model/user.model.js"
 
 dotenv.config()
 
@@ -28,28 +29,34 @@ export const io = new Server(httpServer, {
         origin: allowedOrigins,
         credentials: true
     },
-
     pingTimeout: 60000,
     pingInterval: 25000,
 })
 
 export const userSocketMap = new Map<string, string>()
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
     const userId = socket.handshake.query.userId as string
 
     if (userId) {
 
         userSocketMap.set(userId, socket.id)
+
+
+        await userModel.findByIdAndUpdate(userId, { socketId: socket.id })
+
         console.log(`🟢 User connected: ${userId} → socket: ${socket.id}`)
     }
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
         if (userId) {
-
             if (userSocketMap.get(userId) === socket.id) {
                 userSocketMap.delete(userId)
             }
+
+
+            await userModel.findByIdAndUpdate(userId, { socketId: null })
+
             console.log(`🔴 User disconnected: ${userId}`)
         }
     })
