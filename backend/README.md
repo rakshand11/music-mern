@@ -29,8 +29,9 @@ REST API and real-time server for the Music Tune app.
 - Cloudinary account
 
 ### Installation
+
 ```bash
-git clone https://github.com/ralshand11/music-mern.git
+git clone https://github.com/rakshand11/music-mern.git
 cd music-app-backend
 npm install
 ```
@@ -38,6 +39,7 @@ npm install
 ### Environment Variables
 
 Create a `.env` file in the root:
+
 ```bash
 PORT=3000
 MONGO_URI=your_mongodb_atlas_uri
@@ -53,6 +55,7 @@ NODE_ENV=development
 ```
 
 ### Run Locally
+
 ```bash
 npm start
 ```
@@ -60,6 +63,7 @@ npm start
 Server runs on `http://localhost:3000`
 
 ### Production Build (for Render)
+
 ```bash
 npm run build
 node dist/index.js
@@ -68,43 +72,48 @@ node dist/index.js
 ## API Routes
 
 ### User
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | /user/register | Register user |
-| POST | /user/login | Login user |
-| POST | /user/logout | Logout user |
-| PUT | /user/update | Update profile |
-| POST | /user/like/:songId | Like a song |
-| GET | /user/liked-songs | Get liked songs |
+
+| Method | Route              | Description     |
+| ------ | ------------------ | --------------- |
+| POST   | /user/register     | Register user   |
+| POST   | /user/login        | Login user      |
+| POST   | /user/logout       | Logout user     |
+| PUT    | /user/update       | Update profile  |
+| POST   | /user/like/:songId | Like a song     |
+| GET    | /user/liked-songs  | Get liked songs |
 
 ### Admin
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | /user/admin/login | Admin login |
-| POST | /song/create | Create song |
+
+| Method | Route             | Description |
+| ------ | ----------------- | ----------- |
+| POST   | /user/admin/login | Admin login |
+| POST   | /song/create      | Create song |
 
 ### Songs
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | /song/ | Get all songs |
-| POST | /song/add | Add a song (admin) |
+
+| Method | Route     | Description           |
+| ------ | --------- | --------------------- |
+| GET    | /song/    | Get all songs         |
+| POST   | /song/add | Add a song (admin)    |
 | DELETE | /song/:id | Delete a song (admin) |
 
 ### Playlists
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | /playlist/ | Get all playlists |
-| POST | /playlist/create | Create playlist |
-| DELETE | /playlist/:id | Delete playlist |
+
+| Method | Route            | Description       |
+| ------ | ---------------- | ----------------- |
+| GET    | /playlist/       | Get all playlists |
+| POST   | /playlist/create | Create playlist   |
+| DELETE | /playlist/:id    | Delete playlist   |
 
 ### Schedule
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | /schedule/get-schedule | Get user schedules |
-| POST | /schedule/create | Create schedule |
-| PUT | /schedule/update-schedule/:id | Update schedule |
-| DELETE | /schedule/delete-schedule/:id | Delete schedule |
-| PATCH | /schedule/toggle/:id | Toggle schedule active state |
+
+| Method | Route                         | Description                  |
+| ------ | ----------------------------- | ---------------------------- |
+| GET    | /schedule/get-schedule        | Get user schedules           |
+| POST   | /schedule/create              | Create schedule              |
+| PUT    | /schedule/update-schedule/:id | Update schedule              |
+| DELETE | /schedule/delete-schedule/:id | Delete schedule              |
+| PATCH  | /schedule/toggle/:id          | Toggle schedule active state |
 
 ## How Scheduling Works
 
@@ -114,6 +123,7 @@ node dist/index.js
 4. Frontend receives the event and plays the song instantly
 
 ## Project Structure
+
 ```
 src/
 ├── controller/       # Route controllers
@@ -127,6 +137,7 @@ src/
 ## Deployment
 
 Deployed on Render.
+
 - Build Command: `npm run build`
 - Start Command: `node dist/index.js`
-- Backend URL: `https://api.musictune.com`
+- Backend URL: `https://music-mern-qwkz.onrender.com`
