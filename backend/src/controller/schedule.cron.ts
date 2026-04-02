@@ -6,8 +6,6 @@ export const startScheduleCron = () => {
     cron.schedule("* * * * *", async () => {
         try {
             const now = new Date();
-
-
             console.log(`🕐 Cron check: ${now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`);
 
             const dueSchedules = await scheduleModel
@@ -20,6 +18,7 @@ export const startScheduleCron = () => {
             for (const schedule of dueSchedules) {
                 const scheduledTime = new Date(schedule.scheduledTime);
 
+                // ✅ check within same minute
                 const isSameMinute =
                     scheduledTime.getFullYear() === now.getFullYear() &&
                     scheduledTime.getMonth() === now.getMonth() &&
@@ -30,19 +29,18 @@ export const startScheduleCron = () => {
                 if (isSameMinute) {
                     const userId = (schedule.listener as any)._id.toString();
                     const socketId = userSocketMap.get(userId);
-
-
                     const isSocketActive = socketId && io.sockets.sockets.has(socketId);
 
                     console.log(`🎵 Firing for user: ${userId} | Socket: ${socketId} | Active: ${isSocketActive}`);
 
                     if (isSocketActive) {
                         io.to(socketId).emit("play-song", { song: schedule.song });
-                        console.log(`✅ Emitted to ACTIVE socket: ${socketId}`);
+                        console.log(`✅ Emitted play-song to socket: ${socketId}`);
                     } else {
-                        console.log(`⏸️ User ${userId} OFFLINE - skipping`);
+                        console.log(`⏸️ User ${userId} is OFFLINE — skipping`);
                     }
 
+                    // ✅ deactivate after firing
                     schedule.isActive = false;
                     await schedule.save();
                 }
@@ -54,5 +52,5 @@ export const startScheduleCron = () => {
         timezone: "Asia/Kolkata"
     });
 
-    console.log("✅ Schedule cron started (Asia/Kolkata) - Enhanced logging");
+    console.log("✅ Schedule cron started (Asia/Kolkata)");
 };

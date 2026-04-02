@@ -25,23 +25,33 @@ const httpServer = createServer(app)
 
 export const io = new Server(httpServer, {
     cors: {
-        origin: allowedOrigins, 
+        origin: allowedOrigins,
         credentials: true
-    }
+    },
+
+    pingTimeout: 60000,
+    pingInterval: 25000,
 })
 
 export const userSocketMap = new Map<string, string>()
 
 io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId as string
+
     if (userId) {
+
         userSocketMap.set(userId, socket.id)
         console.log(`🟢 User connected: ${userId} → socket: ${socket.id}`)
     }
 
     socket.on("disconnect", () => {
-        userSocketMap.delete(userId)
-        console.log(`🔴 User disconnected: ${userId}`)
+        if (userId) {
+
+            if (userSocketMap.get(userId) === socket.id) {
+                userSocketMap.delete(userId)
+            }
+            console.log(`🔴 User disconnected: ${userId}`)
+        }
     })
 })
 
@@ -71,12 +81,11 @@ connectCloudinary()
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: allowedOrigins, 
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }))
-
 
 if (process.env.NODE_ENV === "production") {
     setInterval(() => {
@@ -86,7 +95,7 @@ if (process.env.NODE_ENV === "production") {
     }, 10 * 60 * 1000)
 }
 
-app.get(("/"), (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response) => {
     res.send("hello")
 })
 

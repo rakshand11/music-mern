@@ -7,13 +7,20 @@ let socket: Socket | null = null
 export const connectSocket = (userId: string): Socket => {
     if (socket && socket.connected) return socket
 
+
+    if (socket) {
+        socket.disconnect()
+        socket = null
+    }
+
     socket = io(BACKEND_URL, {
         query: { userId },
         withCredentials: true,
         autoConnect: true,
         reconnection: true,
-        reconnectionAttempts: 5,
+        reconnectionAttempts: Infinity,
         reconnectionDelay: 2000,
+        reconnectionDelayMax: 5000,
     })
 
     socket.on("connect", () => {
