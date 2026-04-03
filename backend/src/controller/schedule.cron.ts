@@ -21,7 +21,7 @@ export const startScheduleCron = () => {
 
                 // ✅ fire if within 5s before or 60s after scheduled time
                 const diff = now.getTime() - scheduledTime.getTime();
-                const shouldFire = diff >= -5000 && diff < 55000;
+                const shouldFire = diff >= 0 && diff < 60000;
                 console.log(`🔍 Checking: ${scheduledTime.toISOString()} | diff: ${Math.round(diff / 1000)}s | match: ${shouldFire}`)
 
                 if (shouldFire) {
