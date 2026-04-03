@@ -52,9 +52,10 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         if (!userId) return
 
         const socket = connectSocket(userId)
-
-        socket.on("play-song", ({ song }: { song: Song }) => {
-            console.log("🎵 Scheduled song triggered:", song.title)
+        socket.off("play-song")
+        socket.on("play-song", (data: { song: any }) => {
+            console.log("🎵 Scheduled song triggered:", data.song.title)
+            const song: Song = data.song
             audioRef.current.src = song.audioUrl
             audioRef.current.play()
             setCurrentSong(song)
@@ -74,7 +75,6 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         window.addEventListener("user-logged-in", handleUserLoggedIn)
 
         return () => {
-            disconnectSocket()
             window.removeEventListener("user-logged-in", handleUserLoggedIn)
         }
     }, [])

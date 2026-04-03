@@ -85,31 +85,22 @@ const Home: React.FC<HomeProps> = () => {
             toast.error("Please select a time")
             return
         }
-        try {
-            const istOffset = 5.5 * 60 * 60 * 1000
-            const localDate = new Date(scheduledTime)
-            const utcTime = new Date(localDate.getTime() - istOffset)
+        const localDate = new Date(scheduledTime)
 
-            console.log("📅 Input (local):", scheduledTime)
-            console.log("📅 Sent to server (UTC):", utcTime.toISOString())
-            console.log("📅 Diff from now (seconds):", Math.round((utcTime.getTime() - Date.now()) / 1000))
-
-            if (utcTime.getTime() < Date.now()) {
-                toast.error("Please select a future time")
-                return
-            }
-
-            await api.post("/schedule/create", {
-                song: selectedSong._id,
-                scheduledTime: utcTime.toISOString()
-            })
-            toast.success("Song scheduled!")
-            setShowSchedule(false)
-            setScheduledTime("")
-            setSelectedSong(null)
-        } catch (error: any) {
-            toast.error(error.response?.data?.msg || "Failed to schedule")
+        if (localDate.getTime() < Date.now()) {
+            toast.error("Please select a future time")
+            return
         }
+
+        await api.post("/schedule/create", {
+            song: selectedSong._id,
+            scheduledTime: localDate.toISOString()
+        })
+
+        toast.success("Song scheduled!")
+        setShowSchedule(false)
+        setScheduledTime("")
+        setSelectedSong(null)
     }, [selectedSong, scheduledTime])
 
     const handlePlaySong = useCallback((index: number) => {
@@ -122,13 +113,11 @@ const Home: React.FC<HomeProps> = () => {
         setShowSchedule(true)
     }, [])
 
-
     const getMinTime = () => {
         const now = new Date()
-        const istOffset = 5.5 * 60 * 60 * 1000
-        const istNow = new Date(now.getTime() + istOffset)
-        istNow.setSeconds(0, 0)
-        return istNow.toISOString().slice(0, 16)
+        now.setSeconds(0, 0)
+        const pad = (n: number) => String(n).padStart(2, '0')
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
     }
 
     return (

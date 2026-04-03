@@ -48,29 +48,30 @@ export const userSocketMap = new Map<string, string>()
 io.on("connection", async (socket) => {
     const userId = socket.handshake.query.userId as string
 
-    if (userId) {
-        // ✅ always update with latest socket id on reconnect
-        userSocketMap.set(userId, socket.id)
-
-        // ✅ save to DB so cron can find it
-        await userModel.findByIdAndUpdate(userId, { socketId: socket.id })
-
-        console.log(`🟢 User connected: ${userId} → socket: ${socket.id}`)
+    if (!userId) {
+        console.log("⚠️ User ID missing in handshake query")
+        return
     }
 
-    socket.on("disconnect", async () => {
-        if (userId) {
-            if (userSocketMap.get(userId) === socket.id) {
-                userSocketMap.delete(userId)
+    // 1️⃣ Update DB with current socketId
+    await userModel.findByIdAndUpdate(userId, { socketId: socket.id })
 
-                // ✅ only clear DB if this socket is still the current one
-                await userModel.findOneAndUpdate(
-                    { _id: userId, socketId: socket.id },
-                    { socketId: null }
-                )
-            }
-            console.log(`🔴 User disconnected: ${userId}`)
+    // 2️⃣ Update map
+    userSocketMap.set(userId, socket.id)
+
+    console.log(`🟢 User connected: ${userId} → socket: ${socket.id}`)
+
+    socket.on("disconnect", async () => {
+        if (userSocketMap.get(userId) === socket.id) {
+            userSocketMap.delete(userId)
+
+            // Only clear DB if this is the current socket
+            await userModel.findOneAndUpdate(
+                { _id: userId, socketId: socket.id },
+                { socketId: null }
+            )
         }
+        console.log(`🔴 User disconnected: ${userId}`)
     })
 })
 

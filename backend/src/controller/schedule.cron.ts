@@ -21,10 +21,10 @@ export const startScheduleCron = () => {
 
                 // ✅ fire if within 5s before or 60s after scheduled time
                 const diff = now.getTime() - scheduledTime.getTime();
-                const isSameMinute = diff >= -65000 && diff < 60000;
-                console.log(`🔍 Checking: ${scheduledTime.toISOString()} | diff: ${Math.round(diff / 1000)}s | match: ${isSameMinute}`)
+                const shouldFire = diff >= -5000 && diff < 55000;
+                console.log(`🔍 Checking: ${scheduledTime.toISOString()} | diff: ${Math.round(diff / 1000)}s | match: ${shouldFire}`)
 
-                if (isSameMinute) {
+                if (shouldFire) {
                     const userId = (schedule.listener as any)._id.toString();
 
                     console.log(`⏰ Scheduled time (UTC): ${scheduledTime.toISOString()}`)
@@ -42,10 +42,9 @@ export const startScheduleCron = () => {
                         console.log(`✅ Emitted play-song to socket: ${socketId}`);
                     } else {
                         console.log(`⏸️ User ${userId} is OFFLINE — skipping`);
+
                     }
 
-                    schedule.isActive = false;
-                    await schedule.save();
                 }
             }
         } catch (error) {

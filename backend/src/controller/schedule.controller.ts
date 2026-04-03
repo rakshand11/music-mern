@@ -4,18 +4,19 @@ import { scheduleModel } from "../model/schedule.model.js";
 export const createSchedule = async (req: Request, res: Response) => {
     try {
         const { song, scheduledTime } = req.body
+        console.log("📅 Saving scheduledTime:", scheduledTime)
+        console.log("🕐 Server UTC now:", new Date().toISOString())
+        console.log("⏱️ Diff (seconds):", Math.round((new Date(scheduledTime).getTime() - Date.now()) / 1000))
         const schedule = await scheduleModel.create({
             song,
             scheduledTime,
             listener: req.user._id
         })
         res.status(201).json({ msg: "Schedule created successfully", schedule })
-        return
     } catch (error) {
         res.status(500).json({ msg: "Internal server error" })
     }
 }
-
 export const getUserSchedule = async (req: Request, res: Response) => {
     try {
         const schedules = await scheduleModel
@@ -37,8 +38,6 @@ export const updateSchedules = async (req: Request, res: Response) => {
         if (req.body.song) updates.song = req.body.song
         if (req.body.scheduledTime) updates.scheduledTime = req.body.scheduledTime
 
-
-        updates.isActive = true
 
         const schedule = await scheduleModel.findOneAndUpdate(
             { _id: scheduleId, listener: req.user._id },

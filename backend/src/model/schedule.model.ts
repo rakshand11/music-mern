@@ -10,4 +10,24 @@ const scheduleSchema = new Schema(
     { timestamps: true },
 );
 
+scheduleSchema.pre('save', function () {
+    if (!this.isActive) {
+        console.log("⚠️ isActive set to false — stack:", new Error().stack)
+    }
+})
+
+scheduleSchema.pre('findOneAndUpdate', function () {
+    const update = this.getUpdate() as any
+    if (update && update.isActive === false) {
+        console.log("⚠️ findOneAndUpdate setting isActive=false — stack:", new Error().stack)
+    }
+})
+
+scheduleSchema.pre('updateOne', function () {
+    const update = this.getUpdate() as any
+    if (update && update.isActive === false) {
+        console.log("⚠️ updateOne setting isActive=false — stack:", new Error().stack)
+    }
+})
+
 export const scheduleModel = mongoose.model("schedule", scheduleSchema);
