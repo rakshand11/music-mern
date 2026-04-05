@@ -42,19 +42,28 @@ const Signin: React.FC = () => {
         try {
             setLoading(true);
 
+            // Step 1: regular login to get user info + userToken
             const res = await api.post("/user/login", {
                 email: formData.email,
                 password: formData.password
             });
 
             const user = res.data.user;
+
+            // Step 2: if admin, also hit /user/admin/login to get adminToken cookie
+            if (user.role === "admin") {
+                await api.post("/user/admin/login", {
+                    email: formData.email,
+                    password: formData.password
+                });
+            }
+
             localStorage.removeItem("recentSongs");
             localStorage.setItem("user", JSON.stringify(user));
             window.dispatchEvent(new Event("user-logged-in"));
 
             toast.success("Logged in successfully");
 
-            // ✅ Redirect based on role
             if (user.role === "admin") {
                 navigate("/admin");
             } else {

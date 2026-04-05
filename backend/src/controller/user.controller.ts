@@ -167,3 +167,54 @@ export const getLikedSongs = async (req: Request, res: Response) => {
         res.status(500).json({ msg: "Internal server error" })
     }
 }
+
+export const loginAdmin = async (req: Request, res: Response) => {
+    try {
+        const { email, password } = req.body
+
+        if (email !== process.env.ADMIN_EMAIL) {
+            res.status(403).json({ msg: "Not an admin account" })
+            return
+        }
+
+        const user = await userModel.findOne({ email })
+        if (!user || user.role !== "admin") {
+            res.status(403).json({ msg: "Admin not found" })
+            return
+        }
+
+        const passwordValidation = await bcrypt.compare(password, user.password)
+        if (!passwordValidation) {
+            res.status(401).json({ msg: "Invalid credentials" })
+            return
+        }
+
+        const jwtSecret = process.env.JWT_SECRET || ""
+
+        // ✅ This is what was missing — signing and setting adminToken
+        const token = jwt.sign(
+            { userId: user._id, email: user.email, role: user.role },
+            jwtSecret,
+            { expiresIn: "30d" }
+        )
+
+        res.cookie("adminToken", token, {
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+            maxAge: 30 * 24 * 60 * 60 * 1000
+        })
+
+        res.status(200).json({
+            msg: "Admin logged in successfully",
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        })
+    } catch (error) {
+        res.status(500).json({ msg: "Internal server error" })
+    }
+}

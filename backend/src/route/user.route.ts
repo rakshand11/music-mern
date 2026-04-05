@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getLikedSongs, loginUser, logoutUser, registerUser, toggleLikeSong, updateUser } from "../controller/user.controller.js";
+import { getLikedSongs, loginAdmin, loginUser, logoutUser, registerUser, toggleLikeSong, updateUser } from "../controller/user.controller.js";
 import { userMiddleware } from "../middleware/middleware.js";
 import { upload } from "../middleware/cloudinary.js";
 
@@ -11,3 +11,4 @@ userRouter.post("/logout", logoutUser)
 userRouter.post("/like/:songId", userMiddleware, toggleLikeSong)
 userRouter.get("/liked-songs", userMiddleware, getLikedSongs)
 userRouter.put("/update", userMiddleware, upload.single("avatar"), updateUser)
+userRouter.post("/admin/login", loginAdmin)

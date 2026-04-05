@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import api from '../aiosInstance'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
-import { Music, Upload, X, Pencil, Trash2 } from 'lucide-react'
+import { Music, Upload, X, Pencil, Trash2, LogOut } from 'lucide-react'
 
 type Song = {
     _id: string;
@@ -33,7 +33,10 @@ const Admin = () => {
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem("user") || "null");
-        if (!user || user.role !== "admin") navigate("/signin");
+        if (!user || user.role !== "admin") {
+            toast.error("Admin access only");
+            navigate("/signin");
+        }
     }, [])
 
     useEffect(() => {
@@ -46,6 +49,18 @@ const Admin = () => {
             setSongs(res.data.songs)
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    const handleLogout = async () => {
+        try {
+            await api.post("/user/logout")
+        } catch {
+            // continue even if request fails
+        } finally {
+            localStorage.removeItem("user")
+            localStorage.removeItem("recentSongs")
+            navigate("/signin")
         }
     }
 
@@ -169,6 +184,13 @@ const Admin = () => {
                     </div>
                     <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
                     <p className="text-gray-400 mt-1">Manage Music Tune songs</p>
+                    <button
+                        onClick={handleLogout}
+                        className="mt-3 flex items-center gap-1 mx-auto text-sm text-red-400 hover:text-red-300 transition"
+                    >
+                        <LogOut size={14} />
+                        Logout
+                    </button>
                 </div>
 
                 <div className="flex gap-2 mb-6">
@@ -254,17 +276,25 @@ const Admin = () => {
 
                 {activeTab === "manage" && (
                     <div className="bg-gray-800 rounded-2xl border border-gray-700">
-                        {songs.map(song => (
-                            <div key={song._id} className="flex items-center gap-4 p-4 border-b border-gray-700">
-                                <img src={song.imageUrl} className="w-12 h-12 rounded" />
-                                <div className="flex-1">
-                                    <p className="text-white">{song.title}</p>
-                                    <p className="text-gray-400 text-sm">{song.artist}</p>
+                        {songs.length === 0 ? (
+                            <p className="text-gray-400 text-center py-10">No songs uploaded yet</p>
+                        ) : (
+                            songs.map(song => (
+                                <div key={song._id} className="flex items-center gap-4 p-4 border-b border-gray-700 last:border-b-0">
+                                    <img src={song.imageUrl} className="w-12 h-12 rounded object-cover" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-white truncate">{song.title}</p>
+                                        <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+                                    </div>
+                                    <button onClick={() => handleEdit(song)} className="text-gray-400 hover:text-white transition">
+                                        <Pencil size={16} />
+                                    </button>
+                                    <button onClick={() => handleDelete(song._id)} className="text-gray-400 hover:text-red-400 transition">
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
-                                <button onClick={() => handleEdit(song)}><Pencil size={16} /></button>
-                                <button onClick={() => handleDelete(song._id)}><Trash2 size={16} /></button>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 )}
             </div>

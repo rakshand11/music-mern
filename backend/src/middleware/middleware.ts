@@ -46,21 +46,24 @@ export const userMiddleware = async (req: Request, res: Response, next: NextFunc
 
 export const adminOnly = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.adminToken
+    console.log("adminToken cookie:", token ? "EXISTS" : "MISSING") // 👈 add this temporarily
+
     if (!token) {
         res.status(401).json({ msg: "Access denied, no token found" })
         return
     }
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || "") as JwtPayload
-        req.admin = decoded
-        if (req.admin?.email === process.env.ADMIN_EMAIL) {
-            next()
-        } else {
-            res.status(401).json({ msg: "Not authorised" })
+        const user = await userModel.findById(decoded.userId)
+        if (!user || user.role !== "admin") {
+            res.status(403).json({ msg: "Not authorised" })
             return
         }
+        req.admin = decoded
+        req.user = user
+        next()
     } catch (error) {
-        res.status(401).json({ msg: "Internal server error" })
+        res.status(401).json({ msg: "Invalid token" })
         return
     }
 }
