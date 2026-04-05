@@ -17,37 +17,58 @@ const colors = [
 ];
 
 const MusicBackground = () => {
-    const ICON_COUNT = 50;
+    const COLS = 3;   // columns per side
+    const ROWS = 6;   // rows per side
+    const ICONS_PER_SIDE = COLS * ROWS; // 18 icons per side
 
-    const [notes] = useState(() =>
-        Array.from({ length: ICON_COUNT }, (_, i) => ({
-            left: Math.random() * 100,
-            right: Math.random() * 100,
-            bottom: Math.random() * 100,
-            size: Math.random() * 35 + 30,
-            duration: Math.random() * 7 + 7,
-            delay: Math.random() * 2,
-            icon: icons[i % icons.length],
-            color: colors[i % colors.length],
-        }))
-    );
+    const [notes] = useState(() => {
+        const result = [];
+
+        for (let side = 0; side < 2; side++) {
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const index = side * ICONS_PER_SIDE + row * COLS + col;
+
+                    // Distribute evenly in each cell + small jitter
+                    const cellWidth = 28 / COLS;
+                    const cellHeight = 100 / ROWS;
+
+                    const jitterX = (Math.random() - 0.5) * (cellWidth * 0.4);
+                    const jitterY = (Math.random() - 0.5) * (cellHeight * 0.4);
+
+                    const baseLeft = side === 0
+                        ? col * cellWidth + cellWidth / 2   // left side: 0–28%
+                        : 72 + col * cellWidth + cellWidth / 2; // right side: 72–100%
+
+                    const baseBottom = row * cellHeight + cellHeight / 2;
+
+                    result.push({
+                        left: baseLeft + jitterX,
+                        bottom: baseBottom + jitterY,
+                        size: Math.random() * 20 + 25,
+                        icon: icons[index % icons.length],
+                        color: colors[index % colors.length],
+                    });
+                }
+            }
+        }
+
+        return result;
+    });
 
     return (
         <div className="absolute inset-0 overflow-hidden z-0">
             {notes.map((note, i) => {
                 const Icon = note.icon;
-
                 return (
                     <Icon
                         key={i}
                         className={`absolute ${note.color}`}
                         style={{
                             left: `${note.left}%`,
-                            right: `${note.right}%`,
                             bottom: `${note.bottom}%`,
                             width: `${note.size}px`,
                             height: `${note.size}px`,
-
                         }}
                     />
                 );
