@@ -18,7 +18,6 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT
 
-// ✅ dynamic origin check — allows any localhost port + production URL
 const isOriginAllowed = (origin: string | undefined): boolean => {
     if (!origin) return true
     if (origin.startsWith("http://localhost:")) return true
@@ -53,10 +52,10 @@ io.on("connection", async (socket) => {
         return
     }
 
-    // 1️⃣ Update DB with current socketId
+
     await userModel.findByIdAndUpdate(userId, { socketId: socket.id })
 
-    // 2️⃣ Update map
+
     userSocketMap.set(userId, socket.id)
 
     console.log(`🟢 User connected: ${userId} → socket: ${socket.id}`)
@@ -65,7 +64,7 @@ io.on("connection", async (socket) => {
         if (userSocketMap.get(userId) === socket.id) {
             userSocketMap.delete(userId)
 
-            // Only clear DB if this is the current socket
+
             await userModel.findOneAndUpdate(
                 { _id: userId, socketId: socket.id },
                 { socketId: null }
@@ -101,7 +100,6 @@ connectCloudinary()
 app.use(express.json())
 app.use(cookieParser())
 
-// ✅ dynamic CORS for express routes too
 app.use(cors({
     origin: (origin, callback) => {
         if (isOriginAllowed(origin)) {

@@ -57,7 +57,7 @@ export const loginUser = async (req: Request, res: Response) => {
             maxAge: 30 * 24 * 60 * 60 * 1000
         })
 
-        // ✅ Return explicit fields including role
+
         res.status(200).json({
             msg: "User logged in successfully",
             user: {
@@ -65,7 +65,7 @@ export const loginUser = async (req: Request, res: Response) => {
                 name: user.name,
                 email: user.email,
                 avatar: user.avatar,
-                role: user.role   // 👈 role now included
+                role: user.role
             }
         })
         return
@@ -95,7 +95,7 @@ export const updateUser = async (req: Request, res: Response) => {
                 name: user.name,
                 email: user.email,
                 avatar: user.avatar,
-                role: user.role   // 👈 role included here too
+                role: user.role
             }
         })
         return
@@ -191,7 +191,7 @@ export const loginAdmin = async (req: Request, res: Response) => {
 
         const jwtSecret = process.env.JWT_SECRET || ""
 
-        // ✅ This is what was missing — signing and setting adminToken
+
         const token = jwt.sign(
             { userId: user._id, email: user.email, role: user.role },
             jwtSecret,
