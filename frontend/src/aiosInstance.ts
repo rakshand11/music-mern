@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL || "http://52.66.176.248:3000",
+    baseURL: import.meta.env.VITE_BACKEND_URL || "https://music-mern-1.onrender.com",
     withCredentials: true,
 })
 

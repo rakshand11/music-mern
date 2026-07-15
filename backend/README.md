@@ -1,26 +1,54 @@
-# Music Tune - Backend
+# Dobby Ads Drive — Backend 🗂️
 
-REST API and real-time server for the Music Tune app.
+REST API for a Google Drive-inspired app where users can register, create nested folders, and upload images.
 
-## Tech Stack
+## 🌐 Live API
 
-- Node.js + Express + TypeScript
+- **Backend:** https://your-backend.render.com
+
+> Update this link after deployment.
+
+---
+
+## 🛠️ Tech Stack
+
+- Node.js + Express.js
 - MongoDB + Mongoose
-- Socket.IO
-- JWT Authentication
-- Cloudinary
-- node-cron
+- JWT Authentication (HTTP-only cookies)
+- Cloudinary (image storage)
+- Multer (file uploads)
 
-## Features
+---
 
-- User auth with JWT stored in HTTP-only cookies
-- Song and playlist management
-- Like songs
-- Schedule songs to auto-play via node-cron + Socket.IO
-- Admin panel support
-- Cloudinary for image and audio uploads
+## 📁 Project Structure
 
-## Getting Started
+```
+backend/
+├── src/
+│   ├── config/
+│   │   └── cloudinary.js
+│   ├── controller/
+│   │   ├── user.controller.js
+│   │   ├── folder.controller.js
+│   │   └── image.controller.js
+│   ├── middleware/
+│   │   └── middleware.js
+│   ├── model/
+│   │   ├── user.model.js
+│   │   ├── folder.model.js
+│   │   └── image.model.js
+│   └── route/
+│       ├── user.route.js
+│       ├── folder.route.js
+│       └── image.route.js
+├── index.js
+├── package.json
+└── .env.example
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -28,116 +56,79 @@ REST API and real-time server for the Music Tune app.
 - MongoDB Atlas account
 - Cloudinary account
 
-### Installation
+### Setup
 
 ```bash
-git clone https://github.com/rakshand11/music-mern.git
-cd music-app-backend
+# Install dependencies
 npm install
-```
 
-### Environment Variables
+# Create .env file
+cp .env.example .env
+# Fill in your credentials in .env
 
-Create a `.env` file in the root:
+# Start development server
+npm run dev
 
-```bash
-PORT=3000
-MONGO_URI=your_mongodb_atlas_uri
-JWT_SECRET=your_jwt_secret
-ADMIN_EMAIL=your_admin_email
-ADMIN_PASSWORD=your_admin_password
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-FRONTEND_URL=http://localhost:5173
-BACKEND_URL=http://localhost:3000
-NODE_ENV=development
-```
-
-### Run Locally
-
-```bash
+# Start production server
 npm start
 ```
 
-Server runs on `http://localhost:3000`
+---
 
-### Production Build (for Render)
-
-```bash
-npm run build
-node dist/index.js
-```
-
-## API Routes
-
-### User
-
-| Method | Route              | Description     |
-| ------ | ------------------ | --------------- |
-| POST   | /user/register     | Register user   |
-| POST   | /user/login        | Login user      |
-| POST   | /user/logout       | Logout user     |
-| PUT    | /user/update       | Update profile  |
-| POST   | /user/like/:songId | Like a song     |
-| GET    | /user/liked-songs  | Get liked songs |
-
-### Admin
-
-| Method | Route             | Description |
-| ------ | ----------------- | ----------- |
-| POST   | /user/admin/login | Admin login |
-| POST   | /song/create      | Create song |
-
-### Songs
-
-| Method | Route     | Description           |
-| ------ | --------- | --------------------- |
-| GET    | /song/    | Get all songs         |
-| POST   | /song/add | Add a song (admin)    |
-| DELETE | /song/:id | Delete a song (admin) |
-
-### Playlists
-
-| Method | Route            | Description       |
-| ------ | ---------------- | ----------------- |
-| GET    | /playlist/       | Get all playlists |
-| POST   | /playlist/create | Create playlist   |
-| DELETE | /playlist/:id    | Delete playlist   |
-
-### Schedule
-
-| Method | Route                         | Description                  |
-| ------ | ----------------------------- | ---------------------------- |
-| GET    | /schedule/get-schedule        | Get user schedules           |
-| POST   | /schedule/create              | Create schedule              |
-| PUT    | /schedule/update-schedule/:id | Update schedule              |
-| DELETE | /schedule/delete-schedule/:id | Delete schedule              |
-| PATCH  | /schedule/toggle/:id          | Toggle schedule active state |
-
-## How Scheduling Works
-
-1. User creates a schedule with a song and a time
-2. node-cron checks every minute for active due schedules
-3. When a match is found, Socket.IO emits a `play-song` event to that user
-4. Frontend receives the event and plays the song instantly
-
-## Project Structure
+## 🔑 Environment Variables
 
 ```
-src/
-├── controller/       # Route controllers
-├── middleware/       # Auth middleware + Cloudinary
-├── model/            # Mongoose models
-├── route/            # Express routers
-├── cron/             # node-cron schedule job
-└── index.ts          # Server entry point
+PORT=5000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+CLIENT_URL=http://localhost:5173
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-## Deployment
+---
 
-Deployed on Render.
+## 📡 API Endpoints
 
-- Build Command: `npm run build`
-- Start Command: `node dist/index.js`
-- Backend URL: `https://music-mern-qwkz.onrender.com`
+### Auth
+
+| Method | Endpoint       | Description         | Auth |
+| ------ | -------------- | ------------------- | ---- |
+| POST   | `/user/signup` | Register a new user | ❌   |
+| POST   | `/user/login`  | Login               | ❌   |
+| POST   | `/user/logout` | Logout              | ✅   |
+
+### Folders
+
+| Method | Endpoint            | Description                    | Auth |
+| ------ | ------------------- | ------------------------------ | ---- |
+| POST   | `/folder`           | Create a folder                | ✅   |
+| GET    | `/folder?parentId=` | Get folders (root or nested)   | ✅   |
+| GET    | `/folder/:id`       | Get single folder with size    | ✅   |
+| DELETE | `/folder/:id`       | Delete folder and all contents | ✅   |
+
+### Images
+
+| Method | Endpoint           | Description              | Auth |
+| ------ | ------------------ | ------------------------ | ---- |
+| POST   | `/image`           | Upload image to a folder | ✅   |
+| GET    | `/image?folderId=` | Get images in a folder   | ✅   |
+| DELETE | `/image/:id`       | Delete an image          | ✅   |
+
+---
+
+## 🔐 Test Credentials
+
+```
+Email: test@dobbyads.com
+Password: test123
+```
+
+> Update these with your actual test credentials before submitting.
+
+---
+
+## 👨‍💻 Author
+
+Built by **Rakshan** for the Dobby Ads Full Stack Developer Assignment.
