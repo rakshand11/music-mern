@@ -5,9 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "tsc-watch --onSuccess \"node dist/index.js\"",
-    "dev": "node --watch dist/index.js",
-    "build": "npx tsc -b"
+    "start": "node dist/index.js",
+  "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
+  "build": "npx tsc -b"
   },
   "keywords": [],
   "author": "",
